@@ -1,5 +1,5 @@
 // POST /api/admin  {accion, ...}  (Authorization: Bearer <token de admin>)
-import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar } from '../lib/util.mjs';
+import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, waConfigurado } from '../lib/util.mjs';
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -32,7 +32,7 @@ async function guardar(b) {
   const cedula = soloDigitos(p.cedula) || null;
   const telefono = soloDigitos(p.telefono) || null;
   const visible = p.visible === true;
-  if (visible && !cedula && !telefono) return json({ error: 'Para habilitar el pedido al cliente escribe su cédula o su celular.' }, 400);
+  if (visible && (!telefono || telefono.length !== 10)) return json({ error: 'Para habilitar el pedido escribe el celular del cliente (10 dígitos): ahí le llegará el código por WhatsApp.' }, 400);
   const modalidad = p.modalidad === 'decoracion' ? 'decoracion' : 'alquiler';
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(p.fecha_evento || '') ? p.fecha_evento : null;
   const paso = Math.max(0, Math.min(PASOS[modalidad].length - 1, parseInt(p.paso, 10) || 0));
@@ -98,6 +98,16 @@ export default async (req) => {
         await q(`DELETE FROM pedidos WHERE id = $1`, [id]);
         return json({ ok: true });
       }
+      case 'retos': {
+        // Códigos que los clientes pidieron y aún no se han enviado (cuando no está configurada la API de WhatsApp)
+        const rows = await q(`SELECT r.id, r.telefono, r.codigo, to_char(r.creado AT TIME ZONE 'America/Bogota', 'HH24:MI') AS hora,
+            (SELECT nombre FROM pedidos p WHERE p.visible AND (p.cedula = r.ident OR p.telefono = r.ident) ORDER BY p.id DESC LIMIT 1) AS nombre
+            FROM retos r WHERE NOT r.enviado AND r.expira > now() ORDER BY r.id`);
+        return json({ retos: rows, auto: waConfigurado() });
+      }
+      case 'reto_enviado':
+        await q(`UPDATE retos SET enviado = true WHERE id = $1::int`, [parseInt(b.id, 10)]);
+        return json({ ok: true });
       case 'ajustes': {
         if (typeof b.portal === 'boolean') await setAjuste('portal', b.portal);
         if (Array.isArray(b.instagram)) {

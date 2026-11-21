@@ -58,6 +58,17 @@ const SCHEMA = [
     creado timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS documentos_pedido_idx ON documentos (pedido_id)`,
+  `CREATE TABLE IF NOT EXISTS retos (
+    id serial PRIMARY KEY,
+    ident text NOT NULL,
+    telefono text NOT NULL,
+    codigo text NOT NULL,
+    intentos int NOT NULL DEFAULT 0,
+    enviado boolean NOT NULL DEFAULT false,
+    creado timestamptz NOT NULL DEFAULT now(),
+    expira timestamptz NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS retos_ident_idx ON retos (ident)`,
   `CREATE TABLE IF NOT EXISTS ajustes (clave text PRIMARY KEY, valor jsonb NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS intentos (
     id bigserial PRIMARY KEY,
@@ -152,6 +163,38 @@ export function soloDigitos(v) {
   return d;
 }
 export const refDe = (id) => 'AL-' + String(id).padStart(4, '0');
+
+/* ---------- Códigos de verificación por WhatsApp ---------- */
+export const MIN_CODIGO = 60;      // minutos que sirve el código de 4 números
+export const HORAS_SESION = 24;    // horas que dura el acceso del cliente tras verificar
+export const waConfigurado = () => !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID);
+export const codigo4 = () => String(crypto.randomInt(10000)).padStart(4, '0');
+
+// Envía el código con la API oficial de WhatsApp (plantilla de autenticación). Devuelve true si Meta lo aceptó.
+export async function enviarWhatsApp(telefono, codigo) {
+  if (!waConfigurado()) return false;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: '57' + telefono,
+        type: 'template',
+        template: {
+          name: process.env.WHATSAPP_TEMPLATE || 'codigo_acceso',
+          language: { code: process.env.WHATSAPP_LANG || 'es' },
+          components: [
+            { type: 'body', parameters: [{ type: 'text', text: codigo }] },
+            { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: codigo }] },
+          ],
+        },
+      }),
+    });
+    if (!r.ok) console.error('WhatsApp API', r.status, await r.text());
+    return r.ok;
+  } catch (e) { console.error('WhatsApp API', e); return false; }
+}
 
 /* ---------- Pedido -> objeto JSON ---------- */
 export const COLS_PEDIDO = `id, nombre, cedula, telefono, modalidad, tipo_evento,

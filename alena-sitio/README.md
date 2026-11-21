@@ -16,13 +16,17 @@
 4. En el panel → «Ajustes del sitio»: activa «Habilitar Mi pedido» y pega los enlaces de tus publicaciones de Instagram.
 
 ## Uso diario
-1. Panel → «Nuevo pedido»: nombre, cédula y/o celular, estado, mensaje, valores.
-2. Sube cotización, conformidad firmada, recibos o fotos (PDF/JPG/PNG, máx. 3 MB).
-3. Activa «Habilitar para el cliente», guarda y usa «Enviar enlace al cliente» (abre WhatsApp).
-4. El cliente entra a `tu-sitio/#pedido` → «Ingresar con código» con su cédula o celular.
+1. Panel → «Nuevo pedido»: nombre, **celular (obligatorio para habilitarlo: ahí llega el código)**, cédula (opcional), estado, mensaje y valores.
+2. Sube cotización, conformidad firmada, recibos o fotos (PDF/JPG/PNG, máx. 3 MB) y toca «Subir documento».
+3. Activa «Habilitar para el cliente», guarda y toca «Enviar enlace al cliente» (abre WhatsApp con el enlace).
+4. El cliente entra a `tu-sitio/#pedido` → «Ingresar con código» → escribe su cédula o celular → recibe un código de 4 números por WhatsApp → lo escribe y ve su pedido. El acceso dura 24 horas en ese navegador.
+
+## Cómo llega el código de 4 números
+- **Modo manual (funciona ya, sin configurar nada):** cuando un cliente pide su código, aparece en el panel → pestaña **Códigos**. Tocas «Enviar por WhatsApp» y se abre el chat con el mensaje listo. El código sirve 1 hora.
+- **Modo automático (opcional):** con la API oficial de WhatsApp Business (Meta) los códigos salen solos. Necesitas una plantilla de *autenticación* aprobada por Meta y estas variables en Netlify: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE` (nombre de la plantilla, por defecto `codigo_acceso`) y `WHATSAPP_LANG` (por defecto `es`). Si el envío automático falla, el código cae a la pestaña Códigos.
 
 ## Seguridad
-- Admin y clave solo viven en variables de entorno; las sesiones vencen (8 h admin, 30 min cliente).
-- Límite de intentos por IP (admin: 6 / 15 min; clientes: 12 / 10 min).
-- El cliente solo ve pedidos marcados «visibles» y documentos marcados «visibles»; nunca las notas internas.
-- Ojo: la cédula/celular como único código es práctico pero débil (alguien que conozca esos datos podría ver el pedido). Si quieres más seguridad se puede agregar un PIN por pedido.
+- Admin y clave solo viven en variables de entorno; el acceso del admin dura 8 h y el del cliente 24 h.
+- El código de 4 números sirve una sola vez, vence en 1 hora y se anula tras 5 intentos fallidos. Máximo 3 códigos por hora por cliente.
+- Siempre se envía al celular registrado en el pedido, nunca a uno que escriba quien consulta, y la respuesta es igual exista o no el pedido.
+- El cliente solo ve pedidos y documentos marcados «visibles»; nunca las notas internas.
