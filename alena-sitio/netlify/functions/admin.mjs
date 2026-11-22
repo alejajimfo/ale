@@ -1,5 +1,5 @@
 // POST /api/admin  {accion, ...}  (Authorization: Bearer <token de admin>)
-import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, waConfigurado } from '../lib/util.mjs';
+import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, pin4 } from '../lib/util.mjs';
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -20,12 +20,19 @@ function normalizarIG(v) {
   return m ? `${m[1].toLowerCase()}/${m[2]}` : null;
 }
 
+async function asegurarPin(id) {
+  await q(`UPDATE pedidos SET pin = $2 WHERE id = $1 AND pin IS NULL`, [id, pin4()]);
+}
+
 async function listar() {
+  for (const r of await q(`SELECT id FROM pedidos WHERE pin IS NULL`)) await asegurarPin(r.id);
   const pedidos = await q(`SELECT ${COLS_PEDIDO}, to_char(actualizado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS actualizado FROM pedidos ORDER BY id DESC`);
   const docs = await q(`SELECT id, pedido_id, nombre, tipo, categoria, publico, tam FROM documentos ORDER BY id`);
   return {
     pasos: PASOS,
     ajustes: await getAjustes(),
+    opiniones: await q(`SELECT id, pedido_id, nombre, estrellas, texto, estado, to_char(creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS creado
+                        FROM opiniones ORDER BY (estado = 'pendiente') DESC, creado DESC`),
     pedidos: pedidos.map((p) => ({ ...p, ref: refDe(p.id), docs: docs.filter((d) => d.pedido_id === p.id) })),
   };
 }
@@ -37,10 +44,11 @@ async function guardar(b) {
   const cedula = soloDigitos(p.cedula) || null;
   const telefono = soloDigitos(p.telefono) || null;
   const visible = p.visible === true;
-  if (visible && (!telefono || telefono.length !== 10)) return json({ error: 'Para habilitar el pedido escribe el celular del cliente (10 dígitos): ahí le llegará el código por WhatsApp.' }, 400);
+  if (visible && !cedula && !telefono) return json({ error: 'Para habilitar el pedido escribe la cédula o el celular del cliente: con eso entrará a verlo.' }, 400);
   const modalidad = p.modalidad === 'decoracion' ? 'decoracion' : 'alquiler';
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(p.fecha_evento || '') ? p.fecha_evento : null;
   const paso = Math.max(0, Math.min(PASOS[modalidad].length - 1, parseInt(p.paso, 10) || 0));
+  const recogida = modalidad === 'alquiler' ? texto(p.recogida, 500) : null;
 
   let historial = {};
   let id = parseInt(p.id, 10);
@@ -53,17 +61,18 @@ async function guardar(b) {
 
   const vals = [nombre, cedula, telefono, modalidad, texto(p.tipo_evento, 120), fecha, texto(p.lugar, 200), paso,
     JSON.stringify(historial), texto(p.mensaje, 1500), texto(p.detalle, 4000), entero(p.total), entero(p.abonado),
-    entero(p.deposito), texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items))];
+    entero(p.deposito), texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items)), recogida];
 
   if (Number.isInteger(id)) {
     await q(`UPDATE pedidos SET nombre=$1, cedula=$2, telefono=$3, modalidad=$4, tipo_evento=$5, fecha_evento=$6::date,
              lugar=$7, paso=$8::int, historial=$9::jsonb, mensaje=$10, detalle=$11, total=$12::int, abonado=$13::int,
-             deposito=$14::int, notas_internas=$15, visible=$16::boolean, items=$17::jsonb, actualizado=now() WHERE id=$18::int`, [...vals, id]);
+             deposito=$14::int, notas_internas=$15, visible=$16::boolean, items=$17::jsonb, recogida=$18, actualizado=now() WHERE id=$19::int`, [...vals, id]);
   } else {
     id = (await q(`INSERT INTO pedidos (nombre, cedula, telefono, modalidad, tipo_evento, fecha_evento, lugar, paso, historial,
-             mensaje, detalle, total, abonado, deposito, notas_internas, visible, items)
-             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb) RETURNING id`, vals))[0].id;
+             mensaje, detalle, total, abonado, deposito, notas_internas, visible, items, recogida, pin)
+             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb,$18,$19) RETURNING id`, [...vals, pin4()]))[0].id;
   }
+  await asegurarPin(id);
   return json({ ok: true, id, ref: refDe(id) });
 }
 
@@ -103,16 +112,12 @@ export default async (req) => {
         await q(`DELETE FROM pedidos WHERE id = $1`, [id]);
         return json({ ok: true });
       }
-      case 'retos': {
-        // Códigos que los clientes pidieron y aún no se han enviado (cuando no está configurada la API de WhatsApp)
-        const rows = await q(`SELECT r.id, r.telefono, r.codigo, to_char(r.creado AT TIME ZONE 'America/Bogota', 'HH24:MI') AS hora,
-            (SELECT nombre FROM pedidos p WHERE p.visible AND (p.cedula = r.ident OR p.telefono = r.ident) ORDER BY p.id DESC LIMIT 1) AS nombre
-            FROM retos r WHERE NOT r.enviado AND r.expira > now() ORDER BY r.id`);
-        return json({ retos: rows, auto: waConfigurado() });
+      case 'nuevo_pin': {
+        const id = parseInt(b.id, 10);
+        if (!Number.isInteger(id)) return json({ error: 'Pedido no válido.' }, 400);
+        const r = await q(`UPDATE pedidos SET pin = $2 WHERE id = $1::int RETURNING pin`, [id, pin4()]);
+        return r.length ? json({ ok: true, pin: r[0].pin }) : json({ error: 'Pedido no encontrado.' }, 404);
       }
-      case 'reto_enviado':
-        await q(`UPDATE retos SET enviado = true WHERE id = $1::int`, [parseInt(b.id, 10)]);
-        return json({ ok: true });
       case 'ajustes': {
         if (typeof b.portal === 'boolean') await setAjuste('portal', b.portal);
         if (Array.isArray(b.instagram)) {
@@ -120,6 +125,15 @@ export default async (req) => {
           await setAjuste('instagram', lista);
         }
         return json({ ok: true, ajustes: await getAjustes() });
+      }
+      case 'opinion_estado': {
+        if (!['aprobada', 'rechazada', 'pendiente'].includes(b.estado)) return json({ error: 'Estado no válido.' }, 400);
+        await q(`UPDATE opiniones SET estado = $2 WHERE id = $1::int`, [parseInt(b.id, 10), b.estado]);
+        return json({ ok: true });
+      }
+      case 'opinion_eliminar': {
+        await q(`DELETE FROM opiniones WHERE id = $1::int`, [parseInt(b.id, 10)]);
+        return json({ ok: true });
       }
       case 'subir_doc':
         return await subirDoc(b);

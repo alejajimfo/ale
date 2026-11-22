@@ -44,7 +44,19 @@ const SCHEMA = [
     creado timestamptz NOT NULL DEFAULT now(),
     actualizado timestamptz NOT NULL DEFAULT now()
   )`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pin text`,
   `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS items jsonb NOT NULL DEFAULT '[]'::jsonb`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recogida text`,
+  `CREATE TABLE IF NOT EXISTS opiniones (
+    id serial PRIMARY KEY,
+    pedido_id int REFERENCES pedidos(id) ON DELETE SET NULL,
+    nombre text NOT NULL,
+    estrellas int NOT NULL CHECK (estrellas BETWEEN 1 AND 5),
+    texto text NOT NULL,
+    estado text NOT NULL DEFAULT 'pendiente',
+    creado timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS opiniones_pedido_uq ON opiniones (pedido_id) WHERE pedido_id IS NOT NULL`,
   `CREATE INDEX IF NOT EXISTS pedidos_cedula_idx ON pedidos (cedula)`,
   `CREATE INDEX IF NOT EXISTS pedidos_telefono_idx ON pedidos (telefono)`,
   `CREATE TABLE IF NOT EXISTS documentos (
@@ -59,17 +71,6 @@ const SCHEMA = [
     creado timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS documentos_pedido_idx ON documentos (pedido_id)`,
-  `CREATE TABLE IF NOT EXISTS retos (
-    id serial PRIMARY KEY,
-    ident text NOT NULL,
-    telefono text NOT NULL,
-    codigo text NOT NULL,
-    intentos int NOT NULL DEFAULT 0,
-    enviado boolean NOT NULL DEFAULT false,
-    creado timestamptz NOT NULL DEFAULT now(),
-    expira timestamptz NOT NULL
-  )`,
-  `CREATE INDEX IF NOT EXISTS retos_ident_idx ON retos (ident)`,
   `CREATE TABLE IF NOT EXISTS ajustes (clave text PRIMARY KEY, valor jsonb NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS intentos (
     id bigserial PRIMARY KEY,
@@ -165,44 +166,22 @@ export function soloDigitos(v) {
 }
 export const refDe = (id) => 'AL-' + String(id).padStart(4, '0');
 
-/* ---------- Códigos de verificación por WhatsApp ---------- */
-export const MIN_CODIGO = 60;      // minutos que sirve el código de 4 números
-export const HORAS_SESION = 24;    // horas que dura el acceso del cliente tras verificar
-export const waConfigurado = () => !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_ID);
-export const codigo4 = () => String(crypto.randomInt(10000)).padStart(4, '0');
-
-// Envía el código con la API oficial de WhatsApp (plantilla de autenticación). Devuelve true si Meta lo aceptó.
-export async function enviarWhatsApp(telefono, codigo) {
-  if (!waConfigurado()) return false;
-  try {
-    const r = await fetch(`https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_ID}/messages`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`, 'content-type': 'application/json' },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: '57' + telefono,
-        type: 'template',
-        template: {
-          name: process.env.WHATSAPP_TEMPLATE || 'codigo_acceso',
-          language: { code: process.env.WHATSAPP_LANG || 'es' },
-          components: [
-            { type: 'body', parameters: [{ type: 'text', text: codigo }] },
-            { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: codigo }] },
-          ],
-        },
-      }),
-    });
-    if (!r.ok) console.error('WhatsApp API', r.status, await r.text());
-    return r.ok;
-  } catch (e) { console.error('WhatsApp API', e); return false; }
+/* ---------- PIN personal del pedido (se envía una vez por WhatsApp) ---------- */
+export const HORAS_SESION = 24; // horas que dura el acceso del cliente tras ingresar
+const DEBILES = new Set(['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234', '4321', '0123', '3210', '1212', '2580']);
+export function pin4() {
+  for (;;) {
+    const p = String(crypto.randomInt(10000)).padStart(4, '0');
+    if (!DEBILES.has(p)) return p;
+  }
 }
 
 /* ---------- Pedido -> objeto JSON ---------- */
-export const COLS_PEDIDO = `id, items, nombre, cedula, telefono, modalidad, tipo_evento,
+export const COLS_PEDIDO = `id, items, pin, nombre, cedula, telefono, modalidad, tipo_evento,
   to_char(fecha_evento, 'YYYY-MM-DD') AS fecha_evento, lugar, paso, historial, mensaje, detalle,
-  total, abonado, deposito, notas_internas, visible`;
+  total, abonado, deposito, notas_internas, visible, recogida`;
 
-export function paraCliente(p, docs = []) {
+export function paraCliente(p, docs = [], ops = []) {
   const pasos = PASOS[p.modalidad] || PASOS.alquiler;
   return {
     id: p.id,
@@ -217,6 +196,8 @@ export function paraCliente(p, docs = []) {
     fechas: p.historial || {},
     mensaje: p.mensaje,
     detalle: p.detalle,
+    recogida: p.modalidad === 'alquiler' ? p.recogida : null,
+    opinion: (() => { const o = ops.find((x) => x.pedido_id === p.id); return o ? { estrellas: o.estrellas, texto: o.texto, estado: o.estado } : null; })(),
     items: Array.isArray(p.items) ? p.items : [],
     total: p.total,
     abonado: p.abonado,

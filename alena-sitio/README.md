@@ -16,17 +16,20 @@
 4. En el panel → «Ajustes del sitio»: activa «Habilitar Mi pedido» y pega los enlaces de tus publicaciones de Instagram.
 
 ## Uso diario
-1. Panel → «Nuevo pedido»: elige las piezas del catálogo (con buscador), agrega «Otros» (globos, montaje y desmontaje, transporte…) y el total se suma solo. Llena además: nombre, **celular (obligatorio para habilitarlo: ahí llega el código)**, cédula (opcional), estado, mensaje y valores.
+1. Panel → «Nuevo pedido»: elige las piezas del catálogo (con buscador), agrega «Otros» (globos, montaje y desmontaje, transporte…) y el total se suma solo. Llena además nombre, **cédula y/o celular**, estado, mensaje y valores.
 2. Sube cotización, conformidad firmada, recibos o fotos (PDF/JPG/PNG, máx. 3 MB) y toca «Subir documento».
-3. Activa «Habilitar para el cliente», guarda y toca «Enviar enlace al cliente» (abre WhatsApp con el enlace).
-4. El cliente entra a `tu-sitio/#pedido` → «Ingresar con código» → escribe su cédula o celular → recibe un código de 4 números por WhatsApp → lo escribe y ve su pedido. El acceso dura 24 horas en ese navegador.
+3. Activa «Habilitar para el cliente» y guarda. Al guardar, el pedido recibe un **PIN de 4 números** (se ve en el panel).
+4. Toca «Enviar enlace al cliente»: se abre WhatsApp con el enlace y el PIN ya escritos. Se envía una sola vez.
+5. El cliente entra a `tu-sitio/#pedido` → «Ingresar con código» → escribe su cédula o celular y su PIN. El acceso dura 24 horas en ese navegador.
+6. Si el PIN se filtra: «Generar nuevo» en el pedido; el anterior deja de funcionar.
 
-## Cómo llega el código de 4 números
-- **Modo manual (funciona ya, sin configurar nada):** cuando un cliente pide su código, aparece en el panel → pestaña **Códigos**. Tocas «Enviar por WhatsApp» y se abre el chat con el mensaje listo. El código sirve 1 hora.
-- **Modo automático (opcional):** con la API oficial de WhatsApp Business (Meta) los códigos salen solos. Necesitas una plantilla de *autenticación* aprobada por Meta y estas variables en Netlify: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE` (nombre de la plantilla, por defecto `codigo_acceso`) y `WHATSAPP_LANG` (por defecto `es`). Si el envío automático falla, el código cae a la pestaña Códigos.
-
-## Seguridad
+## Seguridad (todo gratis, sin servicios externos)
 - Admin y clave solo viven en variables de entorno; el acceso del admin dura 8 h y el del cliente 24 h.
-- El código de 4 números sirve una sola vez, vence en 1 hora y se anula tras 5 intentos fallidos. Máximo 3 códigos por hora por cliente.
-- Siempre se envía al celular registrado en el pedido, nunca a uno que escriba quien consulta, y la respuesta es igual exista o no el pedido.
-- El cliente solo ve pedidos y documentos marcados «visibles»; nunca las notas internas.
+- Para ver un pedido hacen falta DOS cosas: cédula o celular + PIN. El cliente solo ve pedidos y documentos marcados «visibles»; nunca las notas internas ni el PIN.
+- El PIN tiene solo 4 números, por eso hay bloqueo: 5 intentos fallidos con los mismos datos bloquean 30 minutos, y 10 fallos desde una misma conexión también.
+- Si los datos no coinciden, el mensaje es siempre el mismo (no revela qué clientes existen).
+- Si alguien bloquea a un cliente a propósito, el cliente puede escribirte por WhatsApp o esperar 30 minutos.
+
+## Novedades: recogida programada y opiniones con aprobación
+- **Recogida programada (solo alquiler):** en el pedido, escribe el campo «Recogida programada» (ej: «Jueves 28, 10 a. m.»). El cliente la ve en su línea de tiempo, después de «Evento», y como aviso debajo. Si lo dejas vacío no aparece nada.
+- **Opiniones:** cuando el pedido llega al paso «Evento» (o posterior), el cliente ve en «Mi pedido» un formulario con estrellas y comentario (1 por pedido). Queda **pendiente**; solo sale en la sección pública «Opiniones» cuando la apruebas en el panel → pestaña «Opiniones» (Aprobar, Ocultar, Eliminar). Se publica con su primer nombre y la inicial del apellido. Las tablas nuevas se crean solas al desplegar.
