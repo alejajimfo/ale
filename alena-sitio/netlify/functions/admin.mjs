@@ -6,6 +6,11 @@ const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const CATEGORIAS = ['cotizacion', 'conformidad', 'recibo', 'foto', 'otro'];
 
 const texto = (v, max = 2000) => { const s = String(v ?? '').trim().slice(0, max); return s || null; };
+const limpiarItems = (v) => (Array.isArray(v) ? v : []).slice(0, 100).map((it) => ({
+  n: String(it?.n ?? '').trim().slice(0, 120),
+  c: Math.max(1, Math.min(999, parseInt(it?.c, 10) || 1)),
+  p: Math.max(0, Math.min(2000000000, parseInt(it?.p, 10) || 0)),
+})).filter((it) => it.n);
 const entero = (v) => Math.max(0, Math.min(2000000000, parseInt(v, 10) || 0));
 
 // Convierte un enlace de Instagram (o "p/CODIGO") en "p/CODIGO"
@@ -48,16 +53,16 @@ async function guardar(b) {
 
   const vals = [nombre, cedula, telefono, modalidad, texto(p.tipo_evento, 120), fecha, texto(p.lugar, 200), paso,
     JSON.stringify(historial), texto(p.mensaje, 1500), texto(p.detalle, 4000), entero(p.total), entero(p.abonado),
-    entero(p.deposito), texto(p.notas_internas, 4000), visible];
+    entero(p.deposito), texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items))];
 
   if (Number.isInteger(id)) {
     await q(`UPDATE pedidos SET nombre=$1, cedula=$2, telefono=$3, modalidad=$4, tipo_evento=$5, fecha_evento=$6::date,
              lugar=$7, paso=$8::int, historial=$9::jsonb, mensaje=$10, detalle=$11, total=$12::int, abonado=$13::int,
-             deposito=$14::int, notas_internas=$15, visible=$16::boolean, actualizado=now() WHERE id=$17::int`, [...vals, id]);
+             deposito=$14::int, notas_internas=$15, visible=$16::boolean, items=$17::jsonb, actualizado=now() WHERE id=$18::int`, [...vals, id]);
   } else {
     id = (await q(`INSERT INTO pedidos (nombre, cedula, telefono, modalidad, tipo_evento, fecha_evento, lugar, paso, historial,
-             mensaje, detalle, total, abonado, deposito, notas_internas, visible)
-             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean) RETURNING id`, vals))[0].id;
+             mensaje, detalle, total, abonado, deposito, notas_internas, visible, items)
+             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb) RETURNING id`, vals))[0].id;
   }
   return json({ ok: true, id, ref: refDe(id) });
 }

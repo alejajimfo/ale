@@ -44,6 +44,7 @@ const SCHEMA = [
     creado timestamptz NOT NULL DEFAULT now(),
     actualizado timestamptz NOT NULL DEFAULT now()
   )`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS items jsonb NOT NULL DEFAULT '[]'::jsonb`,
   `CREATE INDEX IF NOT EXISTS pedidos_cedula_idx ON pedidos (cedula)`,
   `CREATE INDEX IF NOT EXISTS pedidos_telefono_idx ON pedidos (telefono)`,
   `CREATE TABLE IF NOT EXISTS documentos (
@@ -197,7 +198,7 @@ export async function enviarWhatsApp(telefono, codigo) {
 }
 
 /* ---------- Pedido -> objeto JSON ---------- */
-export const COLS_PEDIDO = `id, nombre, cedula, telefono, modalidad, tipo_evento,
+export const COLS_PEDIDO = `id, items, nombre, cedula, telefono, modalidad, tipo_evento,
   to_char(fecha_evento, 'YYYY-MM-DD') AS fecha_evento, lugar, paso, historial, mensaje, detalle,
   total, abonado, deposito, notas_internas, visible`;
 
@@ -216,6 +217,7 @@ export function paraCliente(p, docs = []) {
     fechas: p.historial || {},
     mensaje: p.mensaje,
     detalle: p.detalle,
+    items: Array.isArray(p.items) ? p.items : [],
     total: p.total,
     abonado: p.abonado,
     deposito: p.deposito,

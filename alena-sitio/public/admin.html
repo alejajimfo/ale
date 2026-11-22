@@ -34,6 +34,11 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:#fff;padding:10px 22px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90%}#toast.on{opacity:1}#toast.bad{background:var(--bad)}
 .hint{color:var(--mu);font-size:13px;margin-top:6px}[hidden]{display:none!important}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chips button{background:var(--card);border:1px solid #e3c4b3;border-radius:20px;padding:4px 12px;font:400 12px Outfit;cursor:pointer;color:var(--tx)}.chips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.pk{max-height:210px;overflow:auto;border:1px solid #efd3c4;border-radius:12px}.pkr{display:flex;gap:10px;align-items:center;padding:7px 12px;border-bottom:1px solid #f5e3d8;cursor:pointer;font-size:14px}.pkr:last-child{border:0}.pkr:hover{background:var(--card)}.pkr span{flex:1}.pkr small{color:var(--mu)}.pkr b{color:var(--accd);font-size:18px}
+.otros{margin-top:14px}.orow{display:flex;gap:8px;flex-wrap:wrap}.orow input:nth-child(1){flex:3;min-width:160px}.orow input:nth-child(2){width:70px}.orow input:nth-child(3){width:120px}
+.kl{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f5e3d8;flex-wrap:wrap;font-size:14px}.kn{width:24px;color:var(--mu)}.kt{flex:1;min-width:140px}.kl input{width:100px;padding:6px 8px;font-size:13px}.ks{min-width:80px;text-align:right;font-weight:500}
+.qt{display:flex;align-items:center;gap:6px}.qt button{width:26px;height:26px;border-radius:50%;border:1px solid var(--acc);background:#fff;color:var(--accd);cursor:pointer}
 </style>
 </head>
 <body>
@@ -65,9 +70,19 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <label>Estado del pedido (toca el paso actual)</label><div class="steps" id="e_pasos"></div>
 
 <label>Mensaje para el cliente <span class="hint">(lo verá en su página)</span></label><textarea id="e_msg" rows="2" maxlength="1500" placeholder="Ej: Tu cotización ya está lista. Recuerda confirmar la reserva con el abono."></textarea>
-<label>Detalle de piezas / servicio <span class="hint">(lo verá el cliente)</span></label><textarea id="e_det" rows="4" maxlength="4000" placeholder="• 1 x Neón “Mis Quince Años”&#10;• 1 x Arco ovalado…"></textarea>
+<label>Piezas y servicios del pedido</label>
+<div class="box" style="background:#fff;padding:14px">
+<input id="k_q" placeholder="Buscar en el catálogo…" oninput="pintaCat()">
+<div class="chips" id="k_cats"></div>
+<div class="pk" id="k_res"></div>
+<div class="otros"><b>Otros</b> <span class="hint">(lo que no está en el catálogo)</span>
+<div class="chips"><button type="button" onclick="quick('Globos')">Globos</button><button type="button" onclick="quick('Montaje y desmontaje')">Montaje y desmontaje</button><button type="button" onclick="quick('Transporte')">Transporte</button></div>
+<div class="orow"><input id="o_n" placeholder="Descripción (ej: Globos)" maxlength="120"><input id="o_c" type="number" min="1" value="1" title="Cantidad"><input id="o_p" type="number" min="0" step="1000" placeholder="Valor c/u"><button type="button" class="btn s" onclick="addOtro()">Agregar</button></div></div>
+<h4 style="font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:16px 0 4px">Lista del pedido</h4>
+<div id="k_list"></div><p class="hint" id="k_sum" style="text-align:right;font-weight:500"></p></div>
+<label>Detalles adicionales <span class="hint">(opcional, lo verá el cliente)</span></label><textarea id="e_det" rows="3" maxlength="4000" placeholder="Ej: colores, horario de montaje…"></textarea>
 <div class="g2">
-<div><label>Valor total (COP)</label><input id="e_total" type="number" min="0" step="1000"></div>
+<div><label>Valor total (COP) <span class="hint">se suma solo desde la lista</span></label><input id="e_total" type="number" min="0" step="1000"></div>
 <div><label>Abonado (COP)</label><input id="e_abono" type="number" min="0" step="1000"></div>
 <div><label>Depósito de garantía (COP)</label><input id="e_dep" type="number" min="0" step="1000"></div>
 </div>
@@ -143,7 +158,22 @@ $('e_nombre').value=p.nombre||'';$('e_cedula').value=p.cedula||'';$('e_tel').val
 $('e_fecha').value=p.fecha_evento||'';$('e_lugar').value=p.lugar||'';$('e_msg').value=p.mensaje||'';$('e_det').value=p.detalle||'';
 $('e_total').value=p.total||'';$('e_abono').value=p.abonado||'';$('e_dep').value=p.deposito||'';$('e_int').value=p.notas_internas||'';$('e_vis').checked=!!p.visible;
 $('e_docs').hidden=!p.id;$('e_nodocs').hidden=!!p.id;$('e_del').hidden=!p.id;$('e_wa').hidden=!p.id;
-pintaPasos();pintaDocs();window.scrollTo(0,0)}
+E.items=Array.isArray(p.items)?p.items:[];$('k_q').value='';CATSEL=0;pintaCat();items(false);pintaPasos();pintaDocs();window.scrollTo(0,0)}
+const CATS=['Todo','Estructuras','Mobiliario','Postres y torteros','Iluminación','Fondos en tela','Neones','Números gigantes','Alfombras','Personajes'];
+const CATALOGO=[["Bandeja de exhibición",15000,3],["Torteros dorados (c/u)",15000,3],["Torteros dorados (set x3)",30000,3],["Soporte de postres encaje",15000,3],["Soporte de postres carruaje",20000,3],["Torteros de cristal (c/u)",20000,3],["Torteros de cristal (set x3)",50000,3],["12 velas LED",25000,4],["Portavelas x3",20000,4],["Flor nube",10000,4],["Tela niño o niña",15000,5],["Tela rosa",15000,5],["Tela azul",15000,5],["Tela blanca",15000,5],["Neón “Mis Quince Años”",50000,6],["Neón “Mi Bautizo”",50000,6],["Neón “Feliz Cumpleaños”",50000,6],["Neón “Congrats Grad”",50000,6],["Alfombra café/beige",40000,8],["Alfombra gris claro",40000,8],["Arco ovalado (c/u)",20000,1],["Arcos ovalados (las tres)",50000,1],["Estructura circular",50000,1],["Estructura corazón",50000,1],["Estructura cuadrada",50000,1],["Mesa redonda (c/u)",20000,1],["Mesas redondas (las tres)",50000,1],["Silla trono",150000,2],["Neón “Siempre fuiste tú”",50000,6],["Neón “Mejor juntos”",50000,6],["Neón “Feliz cumpleaños” (inglés)",50000,6],["Neón “Juntos para siempre”",50000,6],["Neón “Oh bebé”",50000,6],["Neón “¿Quieres casarte conmigo?”",50000,6],["Número gigante 0",50000,7],["Número gigante 1",50000,7],["Número gigante 2",50000,7],["Número gigante 3",50000,7],["Número gigante 4",50000,7],["Número gigante 5",50000,7],["Número gigante 6",50000,7],["Número gigante 7",50000,7],["Número gigante 8",50000,7],["Número gigante 9",50000,7],["Woody",50000,9],["Tiro al Blanco",50000,9],["Jessie",50000,9],["Guerreras KPop",50000,9],["Winnie Poh",50000,9],["Igor",50000,9],["Buzz",50000,9],["Stitch",50000,9],["Sailor Moon",50000,9],["Mickey Mouse",65000,9],["Bluey Heeler",50000,9],["Bingo Heeler",50000,9],["Jefe en pañales",50000,9],["Goku bebé",50000,9],["Niña graduada",50000,9],["Snoopy",50000,9],["Jirafa",50000,9],["León",65000,9],["Oveja",50000,9],["Ángel",50000,9],["Vaquita",50000,9],["Cebra",50000,9],["Conejo",50000,9],["Bebé burro Shrek",50000,9],["Elefante",50000,9],["Bebés Shrek",50000,9],["Hada luna",50000,9],["Hada hoja",50000,9],["Conejo mariposa",50000,9],["Conejo bailarina",50000,9]];
+let CATSEL=0;
+function pintaCat(){$('k_cats').innerHTML=CATS.map((c,i)=>`<button type="button" class="${i==CATSEL?'on':''}" onclick="CATSEL=${i};pintaCat()">${esc(c)}</button>`).join('');
+const nz=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),q=nz($('k_q').value).split(/\s+/).filter(Boolean);
+const L=CATALOGO.map((x,i)=>[x,i]).filter(([x])=>(!CATSEL||x[2]==CATSEL)&&q.every(w=>nz(x[0]).includes(w)));
+$('k_res').innerHTML=L.length?L.map(([x,i])=>`<div class="pkr" onclick="addCat(${i})"><span>${esc(x[0])}</span><small>${cop(x[1])}</small><b>＋</b></div>`).join(''):'<p class="hint" style="padding:8px">Sin resultados.</p>'}
+function addCat(i){const x=CATALOGO[i],f=E.items.find(it=>it.n==x[0]&&it.p==x[1]);if(f)f.c++;else E.items.push({n:x[0],c:1,p:x[1]});items(true)}
+function addOtro(){const n=$('o_n').value.trim(),c=parseInt($('o_c').value,10)||1,p=parseInt($('o_p').value,10)||0;if(!n)return toast('Escribe qué es (ej: Globos).',1);
+E.items.push({n,c,p});$('o_n').value='';$('o_p').value='';$('o_c').value=1;items(true)}
+function quick(t){$('o_n').value=t;$('o_p').focus()}
+function qty(i,d){E.items[i].c=Math.max(1,Math.min(999,E.items[i].c+d));items(true)}
+function items(setTotal){const L=E.items;
+$('k_list').innerHTML=L.length?L.map((it,i)=>`<div class="kl"><span class="kn">${i+1}.</span><span class="kt">${esc(it.n)}</span><span class="qt"><button type="button" onclick="qty(${i},-1)">–</button><b>${it.c}</b><button type="button" onclick="qty(${i},1)">+</button></span><input type="number" min="0" step="1000" value="${it.p}" title="Valor c/u" onchange="E.items[${i}].p=parseInt(this.value,10)||0;items(true)"><span class="ks">${cop(it.c*it.p)}</span><button type="button" class="btn r s" onclick="E.items.splice(${i},1);items(true)">✕</button></div>`).join(''):'<p class="hint">Aún no hay nada. Toca una pieza del catálogo o agrega algo en «Otros».</p>';
+const sum=L.reduce((a,it)=>a+it.c*it.p,0);$('k_sum').textContent=L.length?'Suma de la lista: '+cop(sum):'';if(setTotal&&L.length)$('e_total').value=sum}
 function volver(){E=null;tab('p');lista()}
 function pintaPasos(){const P=D.pasos[E.modalidad]||[];if(E.paso>=P.length)E.paso=P.length-1;
 $('e_pasos').innerHTML=P.map((n,i)=>{const c=i<E.paso?'d':i==E.paso?'c':'';const f=E.historial&&E.historial[i]&&i<=E.paso?new Date(E.historial[i]).toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'}):'';
@@ -152,7 +182,7 @@ function pintaDocs(){const C={cotizacion:'Cotización',conformidad:'Conformidad'
 $('e_doclist').innerHTML=(E.docs||[]).length?E.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${C[d.categoria]||'Otro'} · ${Math.max(1,Math.round(d.tam/1024))} KB · ${d.publico?'visible al cliente':'solo equipo'}</small></span>
 <button class="btn o s" onclick="bajar(${d.id},'${esc(d.nombre).replace(/'/g,'')}')">Abrir</button><button class="btn o s" onclick="visDoc(${d.id},${!d.publico})">${d.publico?'Ocultar':'Mostrar'}</button><button class="btn r s" onclick="borraDoc(${d.id})">Quitar</button></div>`).join(''):'<p class="hint">Sin documentos todavía.</p>'}
 
-function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,total:n('e_total'),abonado:n('e_abono'),deposito:n('e_dep'),notas_internas:$('e_int').value,visible:$('e_vis').checked}}
+function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,items:E.items,total:n('e_total'),abonado:n('e_abono'),deposito:n('e_dep'),notas_internas:$('e_int').value,visible:$('e_vis').checked}}
 async function guardar(){const b=$('e_save');b.disabled=true;
 try{const r=await A('guardar',{pedido:leer()});toast('Pedido guardado ✓');await cargar();
 const p=D.pedidos.find(x=>x.id==r.id);if(p)abrir(JSON.parse(JSON.stringify(p)))}catch(e){toast(e.message,1)}finally{b.disabled=false}}

@@ -108,6 +108,7 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 
 .addbar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140px);z-index:35;background:var(--tx);color:#fff;border-radius:30px;padding:8px 8px 8px 20px;display:flex;gap:14px;align-items:center;font-size:14px;transition:.3s;max-width:calc(100% - 100px);box-shadow:0 8px 24px rgba(0,0,0,.25)}.addbar.on{transform:translate(-50%,0)}.addbar button{background:var(--acc);color:#fff;border:0;border-radius:24px;padding:8px 16px;font:500 13px Outfit;cursor:pointer;white-space:nowrap}
 .linkb{background:none;border:0;color:var(--accd);text-decoration:underline;font:400 13px Outfit;cursor:pointer;margin-top:12px}
+.its{padding-left:24px;margin-top:6px;font-size:15px}.its li{padding:7px 0;border-bottom:1px solid #efd3c4}.its li:last-child{border:0}.its li b{float:right;font-weight:500;margin-left:12px}
 </style>
 </head>
 <body>
@@ -438,7 +439,8 @@ return`<article class="pdc"><div class="meta">Pedido ${esc(p.ref)} · ${p.modali
 ${linea(p)}
 ${p.mensaje?`<div class="msg">${esc(p.mensaje)}</div>`:''}
 ${p.total?`<h4>Cotización</h4><div class="eco"><div><small>Total</small><b>${cop(p.total)}</b></div><div><small>Abonado</small><b>${cop(p.abonado)}</b></div><div><small>Saldo</small><b>${cop(saldo)}</b></div>${p.deposito?`<div><small>Depósito de garantía</small><b>${cop(p.deposito)}</b></div>`:''}</div>`:''}
-${p.detalle?`<h4>Detalle</h4><div class="det">${esc(p.detalle)}</div>`:''}
+${p.items&&p.items.length?`<h4>Piezas y servicios</h4><ol class="its">`+p.items.map(it=>`<li><b>${cop(it.c*it.p)}</b>${it.c} × ${esc(it.n)}</li>`).join('')+'</ol>':''}
+${p.detalle?`<h4>Más detalles</h4><div class="det">${esc(p.detalle)}</div>`:''}
 ${p.docs.length?`<h4>Documentos</h4>`+p.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${CAT_DOC[d.categoria]||'Documento'} · ${Math.max(1,Math.round(d.tam/1024))} KB</small></span><button class="btn o" onclick="pdDoc(${d.id})">Descargar</button></div>`).join(''):''}
 </article>`}).join('')+'<p class="res"><button class="btn o" onclick="pdSalir()">Salir</button></p>'}
 async function pdDoc(id){const d=PD.flatMap(p=>p.docs).find(x=>x.id==id);

@@ -16,7 +16,7 @@
 4. En el panel → «Ajustes del sitio»: activa «Habilitar Mi pedido» y pega los enlaces de tus publicaciones de Instagram.
 
 ## Uso diario
-1. Panel → «Nuevo pedido»: nombre, **celular (obligatorio para habilitarlo: ahí llega el código)**, cédula (opcional), estado, mensaje y valores.
+1. Panel → «Nuevo pedido»: elige las piezas del catálogo (con buscador), agrega «Otros» (globos, montaje y desmontaje, transporte…) y el total se suma solo. Llena además: nombre, **celular (obligatorio para habilitarlo: ahí llega el código)**, cédula (opcional), estado, mensaje y valores.
 2. Sube cotización, conformidad firmada, recibos o fotos (PDF/JPG/PNG, máx. 3 MB) y toca «Subir documento».
 3. Activa «Habilitar para el cliente», guarda y toca «Enviar enlace al cliente» (abre WhatsApp con el enlace).
 4. El cliente entra a `tu-sitio/#pedido` → «Ingresar con código» → escribe su cédula o celular → recibe un código de 4 números por WhatsApp → lo escribe y ve su pedido. El acceso dura 24 horas en ese navegador.
