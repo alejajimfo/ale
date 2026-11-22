@@ -1,5 +1,6 @@
 // POST /api/admin  {accion, ...}  (Authorization: Bearer <token de admin>)
-import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, pin4 } from '../lib/util.mjs';
+import { CATALOGO, PRECIO } from '../lib/catalogo.mjs';
+import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, normCodigo, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, pin4 } from '../lib/util.mjs';
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -31,6 +32,8 @@ async function listar() {
   return {
     pasos: PASOS,
     ajustes: await getAjustes(),
+    codigos: await q(`SELECT id, codigo, valor_alquiler, valor_decoracion, activo, nota, items FROM descuentos ORDER BY activo DESC, id DESC`),
+    catalogo: CATALOGO.map(([id, n, p, c]) => ({ id, n, p, c })),
     pedidos: pedidos.map((p) => ({ ...p, ref: refDe(p.id), docs: docs.filter((d) => d.pedido_id === p.id) })),
   };
 }
@@ -56,19 +59,29 @@ async function guardar(b) {
   }
   if (!historial[paso]) historial[paso] = new Date().toISOString();
 
+  const total = entero(p.total);
+  const descuento = Math.min(entero(p.descuento), total);           // el descuento nunca supera el total
+  const deposito = entero(p.deposito);
+  const devuelto = Math.min(entero(p.deposito_devuelto), deposito);  // lo devuelto nunca supera el depósito
+  const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+  const fechaDev = devuelto > 0 ? (/^\d{4}-\d{2}-\d{2}$/.test(p.deposito_dev_fecha || '') ? p.deposito_dev_fecha : hoy) : null;
+
   const vals = [nombre, cedula, telefono, modalidad, texto(p.tipo_evento, 120), fecha, texto(p.lugar, 200), paso,
-    JSON.stringify(historial), texto(p.mensaje, 1500), texto(p.detalle, 4000), entero(p.total), entero(p.abonado),
-    entero(p.deposito), texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items)),
-    modalidad === 'alquiler' ? texto(p.recogida, 500) : null];
+    JSON.stringify(historial), texto(p.mensaje, 1500), texto(p.detalle, 4000), total, entero(p.abonado),
+    deposito, texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items)),
+    modalidad === 'alquiler' ? texto(p.recogida, 500) : null,
+    descuento, descuento > 0 ? texto(p.descuento_nota, 300) : null, devuelto, fechaDev];
 
   if (Number.isInteger(id)) {
     await q(`UPDATE pedidos SET nombre=$1, cedula=$2, telefono=$3, modalidad=$4, tipo_evento=$5, fecha_evento=$6::date,
              lugar=$7, paso=$8::int, historial=$9::jsonb, mensaje=$10, detalle=$11, total=$12::int, abonado=$13::int,
-             deposito=$14::int, notas_internas=$15, visible=$16::boolean, items=$17::jsonb, recogida=$18, actualizado=now() WHERE id=$19::int`, [...vals, id]);
+             deposito=$14::int, notas_internas=$15, visible=$16::boolean, items=$17::jsonb, recogida=$18,
+             descuento=$19::int, descuento_nota=$20, deposito_devuelto=$21::int, deposito_dev_fecha=$22::date, actualizado=now() WHERE id=$23::int`, [...vals, id]);
   } else {
     id = (await q(`INSERT INTO pedidos (nombre, cedula, telefono, modalidad, tipo_evento, fecha_evento, lugar, paso, historial,
-             mensaje, detalle, total, abonado, deposito, notas_internas, visible, items, recogida, pin)
-             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb,$18,$19) RETURNING id`, [...vals, pin4()]))[0].id;
+             mensaje, detalle, total, abonado, deposito, notas_internas, visible, items, recogida,
+             descuento, descuento_nota, deposito_devuelto, deposito_dev_fecha, pin)
+             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb,$18,$19::int,$20,$21::int,$22::date,$23) RETURNING id`, [...vals, pin4()]))[0].id;
   }
   await asegurarPin(id);
   return json({ ok: true, id, ref: refDe(id) });
@@ -110,6 +123,31 @@ export default async (req) => {
         await q(`DELETE FROM pedidos WHERE id = $1`, [id]);
         return json({ ok: true });
       }
+      case 'codigo_guardar': {
+        const codigo = String(b.codigo ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
+        const norm = normCodigo(codigo);
+        if (norm.length < 3) return json({ error: 'El código debe tener al menos 3 caracteres.' }, 400);
+        const va = entero(b.valor_alquiler), vd = entero(b.valor_decoracion);
+        // Precio especial por pieza: { idPieza: precioConDescuento } (solo piezas del catálogo y con precio menor al normal)
+        const items = {};
+        for (const [k, v] of Object.entries(b.items && typeof b.items === 'object' ? b.items : {})) {
+          const precio = parseInt(v, 10);
+          if (PRECIO[k] !== undefined && Number.isInteger(precio) && precio >= 0 && precio < PRECIO[k]) items[k] = precio;
+        }
+        if (!va && !vd && !Object.keys(items).length) return json({ error: 'Define un descuento: un valor fijo para alquiler o montaje, o un precio especial en alguna pieza.' }, 400);
+        const id = parseInt(b.id, 10), activo = b.activo !== false, nota = texto(b.nota, 200);
+        try {
+          if (Number.isInteger(id)) await q(`UPDATE descuentos SET codigo=$2, norm=$3, valor_alquiler=$4::int, valor_decoracion=$5::int, activo=$6::boolean, nota=$7, items=$8::jsonb WHERE id=$1::int`, [id, codigo, norm, va, vd, activo, nota, JSON.stringify(items)]);
+          else await q(`INSERT INTO descuentos (codigo, norm, valor_alquiler, valor_decoracion, activo, nota, items) VALUES ($1,$2,$3::int,$4::int,$5::boolean,$6,$7::jsonb)`, [codigo, norm, va, vd, activo, nota, JSON.stringify(items)]);
+        } catch (e) {
+          if (/duplicate|unique/i.test(String(e?.message))) return json({ error: 'Ya existe un código con ese texto.' }, 400);
+          throw e;
+        }
+        return json({ ok: true, codigos: (await listar()).codigos });
+      }
+      case 'codigo_borrar':
+        await q(`DELETE FROM descuentos WHERE id = $1::int`, [parseInt(b.id, 10)]);
+        return json({ ok: true, codigos: (await listar()).codigos });
       case 'opiniones': {
         const rows = await q(`SELECT o.id, o.pedido_id, o.autor, o.tipo_evento, o.estrellas, o.texto, o.estado,
             to_char(o.creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD') AS fecha

@@ -38,17 +38,21 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 .pk{max-height:210px;overflow:auto;border:1px solid #efd3c4;border-radius:12px}.pkr{display:flex;gap:10px;align-items:center;padding:7px 12px;border-bottom:1px solid #f5e3d8;cursor:pointer;font-size:14px}.pkr:last-child{border:0}.pkr:hover{background:var(--card)}.pkr span{flex:1}.pkr small{color:var(--mu)}.pkr b{color:var(--accd);font-size:18px}
 .otros{margin-top:14px}.orow{display:flex;gap:8px;flex-wrap:wrap}.orow input:nth-child(1){flex:3;min-width:160px}.orow input:nth-child(2){width:70px}.orow input:nth-child(3){width:120px}
 .kl{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f5e3d8;flex-wrap:wrap;font-size:14px}.kn{width:24px;color:var(--mu)}.kt{flex:1;min-width:140px}.kl input{width:100px;padding:6px 8px;font-size:13px}.ks{min-width:80px;text-align:right;font-weight:500}
+.cta{margin-top:12px;border-top:1px dashed #e3c4b3;padding-top:10px;font-size:15px}.cta div{display:flex;justify-content:space-between;padding:3px 0}.cta .t{font-weight:600;font-size:17px}.cta .dep{color:var(--mu);font-size:14px}
+.row.fin{border-color:#d9534f;background:#fdeceb}.row.fin b{color:#b3261e}.tag.fin{background:#d9534f;border-color:#d9534f;color:#fff}.mes{font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:18px 0 6px}
+.fl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.fl button{border:1px solid var(--acc);background:#fff;border-radius:20px;padding:6px 16px;cursor:pointer;color:var(--accd);font:inherit;font-size:14px}.fl button.on{background:var(--acc);color:#fff}.fl select{width:auto;padding:6px 10px;font-size:14px}
 .qt{display:flex;align-items:center;gap:6px}.qt button{width:26px;height:26px;border-radius:50%;border:1px solid var(--acc);background:#fff;color:var(--accd);cursor:pointer}
 </style>
 </head>
 <body>
 <header><div class="bar"><h1>ALENA</h1><span style="color:var(--mu);font-size:14px">Panel del equipo</span><a class="btn o s" href="/">Ver sitio</a><button class="btn o s" onclick="salir()">Cerrar sesión</button></div></header>
 <div class="wrap">
-<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-o" onclick="tab('o')">Opiniones <span id="o_n" class="tag on" hidden></span></button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
+<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-c" onclick="tab('c')">Códigos de descuento</button><button id="tb-o" onclick="tab('o')">Opiniones <span id="o_n" class="tag on" hidden></span></button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
 
 <!-- LISTA -->
 <div id="v-list">
 <div class="tool"><input id="busca" placeholder="Buscar por nombre, cédula, celular o número de pedido…" oninput="lista()"><button class="btn" onclick="nuevo()">＋ Nuevo pedido</button></div>
+<div class="fl" id="fl"></div>
 <div id="lista"></div>
 </div>
 
@@ -82,10 +86,23 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <h4 style="font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:16px 0 4px">Lista del pedido</h4>
 <div id="k_list"></div><p class="hint" id="k_sum" style="text-align:right;font-weight:500"></p></div>
 <label>Detalles adicionales <span class="hint">(opcional, lo verá el cliente)</span></label><textarea id="e_det" rows="3" maxlength="4000" placeholder="Ej: colores, horario de montaje…"></textarea>
+<div class="box" style="background:#fff;padding:14px;margin-top:14px">
+<h4 style="font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:0 0 4px">Cuentas del pedido <span class="hint" style="text-transform:none;letter-spacing:0">(el cliente ve este resumen completo)</span></h4>
 <div class="g2">
-<div><label>Valor total (COP) <span class="hint">se suma solo desde la lista</span></label><input id="e_total" type="number" min="0" step="1000"></div>
-<div><label>Abonado (COP)</label><input id="e_abono" type="number" min="0" step="1000"></div>
-<div><label>Depósito de garantía (COP)</label><input id="e_dep" type="number" min="0" step="1000"></div>
+<div><label>Subtotal (COP) <span class="hint">se suma solo desde la lista</span></label><input id="e_total" type="number" min="0" step="1000" oninput="cuentas()"></div>
+<div><label>Descuento (COP) <span class="hint">lo que cobramos de menos</span></label><input id="e_desc" type="number" min="0" step="1000" oninput="cuentas()"></div>
+</div>
+<label>Aplicar un código de descuento <span class="hint">(opcional: llena el descuento y el motivo por ti)</span></label>
+<div class="tool" style="margin:0 0 4px"><input id="e_cod" placeholder="Escribe el código que mandó el cliente" style="flex:1"><button type="button" class="btn o s" onclick="aplicarCod()">Aplicar</button></div>
+<label>Motivo del descuento <span class="hint">(lo verá el cliente; ej: cliente frecuente, paquete completo)</span></label><input id="e_descn" maxlength="300">
+<div class="g2">
+<div><label>Abonado (COP)</label><input id="e_abono" type="number" min="0" step="1000" oninput="cuentas()"></div>
+<div><label>Depósito de garantía (COP)</label><input id="e_dep" type="number" min="0" step="1000" oninput="cuentas()"></div>
+<div><label>Depósito devuelto (COP)</label><input id="e_depd" type="number" min="0" step="1000" oninput="cuentas()"></div>
+<div><label>Fecha de devolución</label><input id="e_depf" type="date"></div>
+</div>
+<div class="acts" style="margin-top:6px"><button type="button" class="btn o s" onclick="devolverTodo()">Marcar depósito devuelto completo</button></div>
+<div class="cta" id="e_cta"></div>
 </div>
 <label>Notas internas <span class="hint">(el cliente NO las ve)</span></label><textarea id="e_int" rows="2" maxlength="4000"></textarea>
 
@@ -108,6 +125,23 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <button class="btn o" id="e_wa" onclick="avisar()" hidden>Enviar enlace al cliente</button>
 <button class="btn r" id="e_del" onclick="borrar()" hidden>Eliminar</button></div>
 </div></div>
+
+<!-- CÓDIGOS -->
+<div id="v-cod" hidden>
+<div class="box"><h3 style="font-size:26px">Códigos de descuento</h3>
+<p class="hint">Crea el texto que quieras (ej: <i>BAUTIZO2026</i>). El descuento puede ser un valor fijo en pesos (alquiler y/o montaje), un precio especial en las piezas que habilites, o ambos. El cliente lo escribe en su carrito y ve el descuento en <b>%</b>; los precios en pesos quedan solo aquí. Se ignoran mayúsculas, tildes y espacios de sobra.</p>
+<div class="g2"><div><label>Código (texto)</label><input id="c_cod" maxlength="40" placeholder="Ej: ALENA-AMIGOS"></div>
+<div><label>Nota interna <span class="hint">(opcional)</span></label><input id="c_nota" maxlength="200" placeholder="Ej: para Marta, bautizo de enero"></div>
+<div><label>Descuento fijo en alquiler (COP) <span class="hint">opcional</span></label><input id="c_va" type="number" min="0" step="1000" placeholder="0 = no aplica"></div>
+<div><label>Descuento fijo en montaje / decoración (COP) <span class="hint">opcional</span></label><input id="c_vd" type="number" min="0" step="1000" placeholder="0 = no aplica"></div></div>
+<div class="box" style="background:#fff;padding:14px;margin-top:14px">
+<h4 style="font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:0 0 4px">Piezas con precio especial <span class="hint" style="text-transform:none;letter-spacing:0">(las que habilites tendrán descuento con este código)</span></h4>
+<p class="hint">Habilita las piezas y escribe el precio que cobrarás con el código. El panel te dice qué porcentaje de descuento es; también puedes escribir el % y se calcula el precio. Es opcional: puedes usar solo el valor fijo de arriba, solo piezas, o ambos.</p>
+<div class="tool" style="margin:6px 0"><input id="c_q" placeholder="Buscar pieza para habilitar…" oninput="pintaCodItems()"><input id="c_pall" type="number" min="1" max="99" placeholder="% a todas" style="width:110px;flex:none"><button type="button" class="btn o s" onclick="pctTodas()">Aplicar %</button></div>
+<div id="c_items"></div></div>
+<div class="acts"><button class="btn" id="c_go" onclick="codGuardar()">Guardar código</button><button class="btn o" onclick="codigos()">Limpiar</button></div></div>
+<div id="c_lista"></div>
+</div>
 
 <!-- OPINIONES -->
 <div id="v-op" hidden>
@@ -146,23 +180,69 @@ async function A(accion,extra={}){
   if(!r.ok)throw new Error(d.error||'No se pudo completar la acción.');return d}
 function toast(m,bad){const t=$('toast');t.textContent=m;t.className='on'+(bad?' bad':'');clearTimeout(toast._t);toast._t=setTimeout(()=>t.className='',3200)}
 function salir(){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.href='/'}
-function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-o').className=t=='o'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-op').hidden=t!='o';if(t=='o')opiniones()}
+function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-o').className=t=='o'?'on':'';$('tb-c').className=t=='c'?'on':'';$('v-cod').hidden=t!='c';if(t=='c')codigos();$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-op').hidden=t!='o';if(t=='o')opiniones()}
 
 async function cargar(){try{D=await A('listar');lista();ajustes();pend()}catch(e){toast(e.message,1)}}
+let FIL='proceso',ORD='prox';
+const finalizado=p=>p.paso>=(D.pasos[p.modalidad]||[]).length-1;
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const mesDe=f=>f?MESES[+f.slice(5,7)-1]+' '+f.slice(0,4):'Sin fecha de evento';
+function setFil(v){FIL=v;lista()}
 function lista(){const q=$('busca').value.trim().toLowerCase(),qd=q.replace(/\D/g,'');
-const L=D.pedidos.filter(p=>!q||[p.nombre,p.tipo_evento,p.ref].some(x=>String(x||'').toLowerCase().includes(q))||(qd&&[p.cedula,p.telefono].some(x=>(x||'').includes(qd))));
-$('lista').innerHTML=L.length?L.map(p=>{const pasos=D.pasos[p.modalidad]||[];return`<div class="row" onclick="editar(${p.id})"><div class="m"><b>${esc(p.nombre)}</b><small>${esc(p.ref)} · ${esc(p.tipo_evento||'Sin tipo')}${p.fecha_evento?' · '+esc(p.fecha_evento.split('-').reverse().join('/')):''}</small><small>${esc([p.cedula&&'CC '+p.cedula,p.telefono&&'Cel '+p.telefono].filter(Boolean).join(' · '))}</small></div>
-<span class="tag">${esc(pasos[p.paso]||'')}</span><span class="tag ${p.visible?'on':''}">${p.visible?'Visible al cliente':'Oculto'}</span></div>`}).join(''):'<div class="box" style="text-align:center;color:var(--mu)">'+(D.pedidos.length?'Sin resultados.':'Aún no hay pedidos. Crea el primero con «Nuevo pedido».')+'</div>'}
+const nF=D.pedidos.filter(finalizado).length,nP=D.pedidos.length-nF;
+$('fl').innerHTML=[['proceso','En proceso ('+nP+')'],['fin','Finalizados ('+nF+')'],['todos','Todos ('+D.pedidos.length+')']].map(([k,t])=>`<button class="${FIL==k?'on':''}" onclick="setFil('${k}')">${t}</button>`).join('')+
+`<select id="ord" onchange="ORD=this.value;lista()"><option value="prox"${ORD=='prox'?' selected':''}>Fecha del evento: próximos primero</option><option value="rec"${ORD=='rec'?' selected':''}>Fecha del evento: más recientes primero</option><option value="nuevo"${ORD=='nuevo'?' selected':''}>Últimos pedidos creados</option></select>`;
+let L=D.pedidos.filter(p=>q?([p.nombre,p.tipo_evento,p.ref].some(x=>String(x||'').toLowerCase().includes(q))||(qd&&[p.cedula,p.telefono].some(x=>(x||'').includes(qd)))):(FIL=='todos'||(FIL=='fin')==finalizado(p)));
+const hoy=new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});
+const cmp={prox:(x,y)=>(x.fecha_evento||'9999').localeCompare(y.fecha_evento||'9999')||y.id-x.id,rec:(x,y)=>(y.fecha_evento||'').localeCompare(x.fecha_evento||'')||y.id-x.id,nuevo:(x,y)=>y.id-x.id}[ORD];
+L=[...L].sort(cmp);let mes='';
+$('lista').innerHTML=L.length?L.map(p=>{const pasos=D.pasos[p.modalidad]||[],fin=finalizado(p),neto=Math.max(0,p.total-(p.descuento||0)),saldo=Math.max(0,neto-p.abonado),dep=p.deposito>(p.deposito_devuelto||0);
+let h='';if(ORD!='nuevo'&&mesDe(p.fecha_evento)!=mes){mes=mesDe(p.fecha_evento);h=`<div class="mes">${esc(mes)}</div>`}
+return h+`<div class="row ${fin?'fin':''}" onclick="editar(${p.id})"><div class="m"><b>${esc(p.nombre)}</b><small>${esc(p.ref)} · ${esc(p.tipo_evento||'Sin tipo')}${p.fecha_evento?' · '+esc(p.fecha_evento.split('-').reverse().join('/')):''}</small><small>${esc([p.cedula&&'CC '+p.cedula,p.telefono&&'Cel '+p.telefono].filter(Boolean).join(' · '))}</small>${p.total?`<small>Total ${cop(neto)}${p.descuento?' (con desc. '+cop(p.descuento)+')':''} · Saldo ${saldo?cop(saldo):'pagado ✓'}</small>`:''}</div>
+<span class="tag ${fin?'fin':''}">${esc(pasos[p.paso]||'')}</span>${dep?`<span class="tag" style="border-color:#d9534f;color:#b3261e">Depósito por devolver ${cop(p.deposito-(p.deposito_devuelto||0))}</span>`:''}<span class="tag ${p.visible?'on':''}">${p.visible?'Visible al cliente':'Oculto'}</span></div>`}).join(''):'<div class="box" style="text-align:center;color:var(--mu)">'+(D.pedidos.length?(q?'Sin resultados.':FIL=='fin'?'Aún no hay pedidos finalizados.':'No hay pedidos en proceso.'):'Aún no hay pedidos. Crea el primero con «Nuevo pedido».')+'</div>'}
+/* ---- códigos de descuento ---- */
+const nz2=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
+function aplicarCod(){const c=D.codigos.find(x=>nz2(x.codigo)==nz2($('e_cod').value));if(!$('e_cod').value.trim())return toast('Escribe el código.',1);
+if(!c)return toast('Ese código no existe. Créalo en la pestaña «Códigos de descuento».',1);if(!c.activo)return toast('Ese código está desactivado.',1);
+const fijo=E.modalidad=='alquiler'?c.valor_alquiler:c.valor_decoracion;let pp=0,n=0;
+if(E.modalidad=='alquiler')for(const it of E.items){const x=D.catalogo.find(k=>k.n==it.n);if(x&&c.items&&c.items[x.id]!==undefined&&c.items[x.id]<it.p){pp+=it.c*(it.p-c.items[x.id]);n++}}
+const v=fijo+pp;if(!v)return toast(E.modalidad=='alquiler'?'Ese código no da descuento con las piezas de este pedido.':'Ese código no aplica para decoración con montaje.',1);
+$('e_desc').value=Math.min(v,parseInt($('e_total').value,10)||v);$('e_descn').value='Código '+c.codigo;cuentas();toast('Código aplicado ✓'+(n?` (precio especial en ${n} pieza${n>1?'s':''})`:''))}
+let CODE=null,CI={};
+const catP=id=>D.catalogo.find(x=>x.id==id);
+const pctDe=(p,s)=>p?Math.round((p-s)/p*1000)/10:0;
+function pintaCodItems(){const q=String($('c_q').value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(Boolean);
+const on=Object.keys(CI).map(catP).filter(Boolean);
+const res=q.length?D.catalogo.filter(x=>CI[x.id]===undefined&&q.every(w=>x.n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(w))).slice(0,12):[];
+$('c_items').innerHTML=(on.length?on.map(x=>`<div class="kl"><span class="kt"><b>${esc(x.n)}</b><br><small style="color:var(--mu)">Precio normal ${cop(x.p)}</small></span><label style="margin:0;font-size:12px">Precio con código<input type="number" min="0" max="${x.p-1}" step="500" value="${CI[x.id]}" oninput="ciPrecio('${x.id}',this.value)"></label><label style="margin:0;font-size:12px">Descuento %<input type="number" min="1" max="100" step="0.5" value="${pctDe(x.p,CI[x.id])}" oninput="ciPct('${x.id}',this.value)" id="cp_${x.id}"></label><button type="button" class="btn r s" onclick="ciQuitar('${x.id}')">Quitar</button></div>`).join(''):'<p class="hint">Aún no hay piezas habilitadas.</p>')+
+(res.length?'<div class="mes" style="margin-top:12px">Resultados</div><div class="pk">'+res.map(x=>`<div class="pkr" onclick="ciAdd('${x.id}')"><span>${esc(x.n)}</span><small>${cop(x.p)}</small><b>＋</b></div>`).join('')+'</div>':q.length?'<p class="hint">Sin resultados.</p>':'')}
+function ciAdd(id){CI[id]=catP(id).p;pintaCodItems()}
+function ciQuitar(id){delete CI[id];pintaCodItems()}
+function ciPrecio(id,v){CI[id]=Math.max(0,Math.min(catP(id).p,parseInt(v,10)||0));const e=$('cp_'+id);if(e)e.value=pctDe(catP(id).p,CI[id])}
+function ciPct(id,v){const p=catP(id).p,pc=Math.max(0,Math.min(100,parseFloat(v)||0));CI[id]=Math.round(p*(1-pc/100)/100)*100;const e=document.querySelector(`[oninput="ciPrecio('${id}',this.value)"]`);if(e)e.value=CI[id]}
+function pctTodas(){const pc=parseFloat($('c_pall').value);if(!(pc>0&&pc<=100))return toast('Escribe un % entre 1 y 100.',1);if(!Object.keys(CI).length)return toast('Primero habilita piezas.',1);for(const id in CI)CI[id]=Math.round(catP(id).p*(1-pc/100)/100)*100;pintaCodItems()}
+function codigos(){CODE=null;CI={};$('c_cod').value='';$('c_nota').value='';$('c_va').value='';$('c_vd').value='';$('c_q').value='';$('c_pall').value='';pintaCodItems();$('c_lista').innerHTML=D.codigos&&D.codigos.length?D.codigos.map(c=>`<div class="box" style="margin-top:12px;${c.activo?'':'opacity:.6'}"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b style="font-size:17px;letter-spacing:.04em">${esc(c.codigo)}</b><span class="tag ${c.activo?'on':''}">${c.activo?'Activo':'Desactivado'}</span><small style="color:var(--mu)">Valor fijo alquiler: ${c.valor_alquiler?cop(c.valor_alquiler):'—'} · Montaje: ${c.valor_decoracion?cop(c.valor_decoracion):'—'} · Piezas con precio especial: ${Object.keys(c.items||{}).length}${c.nota?' · '+esc(c.nota):''}</small></div>
+<div class="acts"><button class="btn o s" onclick="codEditar(${c.id})">Editar</button><button class="btn o s" onclick="codToggle(${c.id})">${c.activo?'Desactivar':'Activar'}</button><button class="btn r s" onclick="codBorrar(${c.id})">Eliminar</button></div></div>`).join(''):'<div class="box" style="text-align:center;color:var(--mu);margin-top:12px">Aún no hay códigos.</div>'}
+function codEditar(id){const c=D.codigos.find(x=>x.id==id);CODE=id;$('c_cod').value=c.codigo;$('c_nota').value=c.nota||'';$('c_va').value=c.valor_alquiler||'';$('c_vd').value=c.valor_decoracion||'';CI={...(c.items||{})};$('c_q').value='';pintaCodItems();window.scrollTo(0,0);toast('Edita y toca «Guardar código».')}
+async function codGuardar(extra={}){try{const r=await A('codigo_guardar',{id:CODE,codigo:$('c_cod').value,nota:$('c_nota').value,valor_alquiler:$('c_va').value,valor_decoracion:$('c_vd').value,items:CI,...extra});D.codigos=r.codigos;codigos();toast('Código guardado ✓')}catch(e){toast(e.message,1)}}
+async function codToggle(id){const c=D.codigos.find(x=>x.id==id);try{const r=await A('codigo_guardar',{id,codigo:c.codigo,nota:c.nota,valor_alquiler:c.valor_alquiler,valor_decoracion:c.valor_decoracion,items:c.items||{},activo:!c.activo});D.codigos=r.codigos;codigos()}catch(e){toast(e.message,1)}}
+async function codBorrar(id){if(!confirm('¿Eliminar este código? Los pedidos que ya lo usaron no cambian.'))return;try{const r=await A('codigo_borrar',{id});D.codigos=r.codigos;codigos()}catch(e){toast(e.message,1)}}
+/* ---- cuentas ---- */
+function cuentas(){const n=i=>parseInt($(i).value,10)||0,t=n('e_total'),d=Math.min(n('e_desc'),t),neto=t-d,ab=n('e_abono'),dep=n('e_dep'),dv=Math.min(n('e_depd'),dep);
+const r=(a,b,c)=>`<div class="${c||''}"><span>${a}</span><b>${b}</b></div>`;
+$('e_cta').innerHTML=r('Subtotal',cop(t))+(d?r('Descuento'+(t?' ('+(Math.round(d/t*1000)/10)+' %, así lo ve el cliente)':''),'– '+cop(d)):'')+r('Total a pagar',cop(neto),'t')+r('Abonado',cop(ab))+r(ab>neto?'Pagado de más':'Saldo por pagar',cop(Math.abs(neto-ab)))+
+(dep?r('Depósito de garantía',cop(dep),'dep')+r('Depósito devuelto',dv>=dep?'Completo ✓ '+cop(dv):cop(dv),'dep')+(dv<dep?r('Depósito por devolver',cop(dep-dv),'dep'):''):'')}
+function devolverTodo(){const dep=parseInt($('e_dep').value,10)||0;if(!dep)return toast('Primero escribe el valor del depósito.',1);$('e_depd').value=dep;if(!$('e_depf').value)$('e_depf').value=new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'});cuentas()}
 
-function nuevo(){abrir({id:null,nombre:'',cedula:'',telefono:'',modalidad:'alquiler',tipo_evento:'',fecha_evento:'',lugar:'',paso:0,historial:{},mensaje:'',detalle:'',total:0,abonado:0,deposito:0,notas_internas:'',recogida:'',visible:false,docs:[]})}
+function nuevo(){abrir({id:null,nombre:'',cedula:'',telefono:'',modalidad:'alquiler',tipo_evento:'',fecha_evento:'',lugar:'',paso:0,historial:{},mensaje:'',detalle:'',total:0,abonado:0,deposito:0,notas_internas:'',recogida:'',descuento:0,descuento_nota:'',deposito_devuelto:0,deposito_dev_fecha:'',visible:false,docs:[]})}
 function editar(id){abrir(JSON.parse(JSON.stringify(D.pedidos.find(p=>p.id==id))))}
 function abrir(p){E=p;$('v-list').hidden=true;$('v-edit').hidden=false;$('v-aj').hidden=true;
 $('e-tit').textContent=p.id?`${p.ref} · ${p.nombre}`:'Nuevo pedido';
 $('e_nombre').value=p.nombre||'';$('e_cedula').value=p.cedula||'';$('e_tel').value=p.telefono||'';$('e_mod').value=p.modalidad;$('e_tipo').value=p.tipo_evento||'';
 $('e_fecha').value=p.fecha_evento||'';$('e_lugar').value=p.lugar||'';$('e_msg').value=p.mensaje||'';$('e_det').value=p.detalle||'';
-$('e_total').value=p.total||'';$('e_abono').value=p.abonado||'';$('e_dep').value=p.deposito||'';$('e_int').value=p.notas_internas||'';$('e_rec').value=p.recogida||'';$('e_vis').checked=!!p.visible;
+$('e_total').value=p.total||'';$('e_abono').value=p.abonado||'';$('e_dep').value=p.deposito||'';$('e_desc').value=p.descuento||'';$('e_descn').value=p.descuento_nota||'';$('e_depd').value=p.deposito_devuelto||'';$('e_depf').value=p.deposito_dev_fecha||'';$('e_int').value=p.notas_internas||'';$('e_rec').value=p.recogida||'';$('e_vis').checked=!!p.visible;
 $('e_pin').hidden=!p.id;$('e_pinv').textContent=p.pin||'';$('e_docs').hidden=!p.id;$('e_nodocs').hidden=!!p.id;$('e_del').hidden=!p.id;$('e_wa').hidden=!p.id;
-E.items=Array.isArray(p.items)?p.items:[];$('k_q').value='';CATSEL=0;pintaCat();items(false);pintaPasos();pintaDocs();window.scrollTo(0,0)}
+E.items=Array.isArray(p.items)?p.items:[];$('k_q').value='';CATSEL=0;pintaCat();items(false);pintaPasos();pintaDocs();cuentas();window.scrollTo(0,0)}
 const CATS=['Todo','Estructuras','Mobiliario','Postres y torteros','Iluminación','Fondos en tela','Neones','Números gigantes','Alfombras','Personajes'];
 const CATALOGO=[["Bandeja de exhibición",15000,3],["Torteros dorados (c/u)",15000,3],["Torteros dorados (set x3)",30000,3],["Soporte de postres encaje",15000,3],["Soporte de postres carruaje",20000,3],["Torteros de cristal (c/u)",20000,3],["Torteros de cristal (set x3)",50000,3],["12 velas LED",25000,4],["Portavelas x3",20000,4],["Flor nube",10000,4],["Tela niño o niña",15000,5],["Tela rosa",15000,5],["Tela azul",15000,5],["Tela blanca",15000,5],["Neón “Mis Quince Años”",50000,6],["Neón “Mi Bautizo”",50000,6],["Neón “Feliz Cumpleaños”",50000,6],["Neón “Congrats Grad”",50000,6],["Alfombra café/beige",40000,8],["Alfombra gris claro",40000,8],["Arco ovalado (c/u)",20000,1],["Arcos ovalados (las tres)",50000,1],["Estructura circular",50000,1],["Estructura corazón",50000,1],["Estructura cuadrada",50000,1],["Mesa redonda (c/u)",20000,1],["Mesas redondas (las tres)",50000,1],["Silla trono",150000,2],["Neón “Siempre fuiste tú”",50000,6],["Neón “Mejor juntos”",50000,6],["Neón “Feliz cumpleaños” (inglés)",50000,6],["Neón “Juntos para siempre”",50000,6],["Neón “Oh bebé”",50000,6],["Neón “¿Quieres casarte conmigo?”",50000,6],["Número gigante 0",50000,7],["Número gigante 1",50000,7],["Número gigante 2",50000,7],["Número gigante 3",50000,7],["Número gigante 4",50000,7],["Número gigante 5",50000,7],["Número gigante 6",50000,7],["Número gigante 7",50000,7],["Número gigante 8",50000,7],["Número gigante 9",50000,7],["Woody",50000,9],["Tiro al Blanco",50000,9],["Jessie",50000,9],["Guerreras KPop",50000,9],["Winnie Poh",50000,9],["Igor",50000,9],["Buzz",50000,9],["Stitch",50000,9],["Sailor Moon",50000,9],["Mickey Mouse",65000,9],["Bluey Heeler",50000,9],["Bingo Heeler",50000,9],["Jefe en pañales",50000,9],["Goku bebé",50000,9],["Niña graduada",50000,9],["Snoopy",50000,9],["Jirafa",50000,9],["León",65000,9],["Oveja",50000,9],["Ángel",50000,9],["Vaquita",50000,9],["Cebra",50000,9],["Conejo",50000,9],["Bebé burro Shrek",50000,9],["Elefante",50000,9],["Bebés Shrek",50000,9],["Hada luna",50000,9],["Hada hoja",50000,9],["Conejo mariposa",50000,9],["Conejo bailarina",50000,9]];
 let CATSEL=0;
@@ -177,7 +257,7 @@ function quick(t){$('o_n').value=t;$('o_p').focus()}
 function qty(i,d){E.items[i].c=Math.max(1,Math.min(999,E.items[i].c+d));items(true)}
 function items(setTotal){const L=E.items;
 $('k_list').innerHTML=L.length?L.map((it,i)=>`<div class="kl"><span class="kn">${i+1}.</span><span class="kt">${esc(it.n)}</span><span class="qt"><button type="button" onclick="qty(${i},-1)">–</button><b>${it.c}</b><button type="button" onclick="qty(${i},1)">+</button></span><input type="number" min="0" step="1000" value="${it.p}" title="Valor c/u" onchange="E.items[${i}].p=parseInt(this.value,10)||0;items(true)"><span class="ks">${cop(it.c*it.p)}</span><button type="button" class="btn r s" onclick="E.items.splice(${i},1);items(true)">✕</button></div>`).join(''):'<p class="hint">Aún no hay nada. Toca una pieza del catálogo o agrega algo en «Otros».</p>';
-const sum=L.reduce((a,it)=>a+it.c*it.p,0);$('k_sum').textContent=L.length?'Suma de la lista: '+cop(sum):'';if(setTotal&&L.length)$('e_total').value=sum}
+const sum=L.reduce((a,it)=>a+it.c*it.p,0);$('k_sum').textContent=L.length?'Suma de la lista: '+cop(sum):'';if(setTotal&&L.length){$('e_total').value=sum;cuentas()}}
 function volver(){E=null;tab('p');lista()}
 function pintaPasos(){$('e_rec_w').hidden=E.modalidad!='alquiler';const P=D.pasos[E.modalidad]||[];if(E.paso>=P.length)E.paso=P.length-1;
 $('e_pasos').innerHTML=P.map((n,i)=>{const c=i<E.paso?'d':i==E.paso?'c':'';const f=E.historial&&E.historial[i]&&i<=E.paso?new Date(E.historial[i]).toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'}):'';
@@ -186,7 +266,7 @@ function pintaDocs(){const C={cotizacion:'Cotización',conformidad:'Conformidad'
 $('e_doclist').innerHTML=(E.docs||[]).length?E.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${C[d.categoria]||'Otro'} · ${Math.max(1,Math.round(d.tam/1024))} KB · ${d.publico?'visible al cliente':'solo equipo'}</small></span>
 <button class="btn o s" onclick="bajar(${d.id},'${esc(d.nombre).replace(/'/g,'')}')">Abrir</button><button class="btn o s" onclick="visDoc(${d.id},${!d.publico})">${d.publico?'Ocultar':'Mostrar'}</button><button class="btn r s" onclick="borraDoc(${d.id})">Quitar</button></div>`).join(''):'<p class="hint">Sin documentos todavía.</p>'}
 
-function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,items:E.items,total:n('e_total'),abonado:n('e_abono'),deposito:n('e_dep'),notas_internas:$('e_int').value,recogida:$('e_rec').value,visible:$('e_vis').checked}}
+function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,items:E.items,total:n('e_total'),descuento:n('e_desc'),descuento_nota:$('e_descn').value,abonado:n('e_abono'),deposito:n('e_dep'),deposito_devuelto:n('e_depd'),deposito_dev_fecha:$('e_depf').value,notas_internas:$('e_int').value,recogida:$('e_rec').value,visible:$('e_vis').checked}}
 async function guardar(){const b=$('e_save');b.disabled=true;
 try{const r=await A('guardar',{pedido:leer()});toast('Pedido guardado ✓');await cargar();
 const p=D.pedidos.find(x=>x.id==r.id);if(p)abrir(JSON.parse(JSON.stringify(p)))}catch(e){toast(e.message,1)}finally{b.disabled=false}}

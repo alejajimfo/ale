@@ -108,6 +108,9 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 
 .addbar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140px);z-index:35;background:var(--tx);color:#fff;border-radius:30px;padding:8px 8px 8px 20px;display:flex;gap:14px;align-items:center;font-size:14px;transition:.3s;max-width:calc(100% - 100px);box-shadow:0 8px 24px rgba(0,0,0,.25)}.addbar.on{transform:translate(-50%,0)}.addbar button{background:var(--acc);color:#fff;border:0;border-radius:24px;padding:8px 16px;font:500 13px Outfit;cursor:pointer;white-space:nowrap}
 .linkb{background:none;border:0;color:var(--accd);text-decoration:underline;font:400 13px Outfit;cursor:pointer;margin-top:12px}
+.cta{background:#fff;border:1px solid #efd3c4;border-radius:14px;padding:6px 14px}.cta div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f3e1d6;font-size:15px}.cta div:last-child{border:0}.cta small{color:var(--mu,#8a7468);font-size:12px}.cta .t{font-weight:600;font-size:17px}.cta .ds{color:#2e7d32}.cta .sd{color:#b3261e}.cta .ok{color:#2e7d32}.cta hr{border:0;border-top:2px dashed #efd3c4;margin:4px 0}.cta b{text-align:right;font-weight:500}
+.avc{background:#fff3e6;border:1px dashed var(--acc,#c9744f);border-radius:12px;padding:10px 12px;margin:10px 0 12px;font-size:14px;font-style:normal;text-align:left}.avc a{font-size:13px;color:var(--accd,#a85a3a);text-decoration:underline;display:inline-block;margin-top:4px}
+.cdrow{display:flex;gap:8px;margin:12px 0 4px}.cdrow input{flex:1;min-width:0;border:1px solid #e3c4b3;border-radius:10px;padding:10px;font:inherit;font-size:14px;text-transform:uppercase}.cdrow .btn{padding:8px 16px;font-size:13px}.cder{color:#b3261e;font-size:13px;margin:2px 0 6px}.cdok{background:#eef7ee;border:1px solid #b9dcb9;color:#2e6b2e;border-radius:10px;padding:10px 12px;margin:12px 0 4px;font-size:14px}.cdok button{background:none;border:0;color:#2e6b2e;text-decoration:underline;cursor:pointer;font:inherit;font-size:13px;margin-left:6px}.cdt{color:#2e7d32}
 .rec{background:#fff3e6;border:1px dashed var(--acc,#c9744f);border-radius:14px;padding:12px 14px;margin:10px 0;font-size:15px}.rec b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
 .opf{background:#fff;border:1px solid #efd3c4;border-radius:14px;padding:14px;margin-top:6px}.stars{display:flex;gap:4px;margin:6px 0}.stars button{background:none;border:0;font-size:32px;line-height:1;color:#d9c3b5;cursor:pointer;padding:0 2px}.stars button.on{color:#d4af37}.opf textarea{width:100%;border:1px solid #e3c4b3;border-radius:10px;padding:10px;font:inherit}.opf .er{color:#b3261e;font-size:14px;min-height:18px}
 .its{padding-left:24px;margin-top:6px;font-size:15px}.its li{padding:7px 0;border-bottom:1px solid #efd3c4}.its li:last-child{border:0}.its li b{float:right;font-weight:500;margin-left:12px}
@@ -212,7 +215,9 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 <button class="btn o" onclick="pdModo('admin')">Inicia sesión</button></div>
 
 <div class="op-card pdbox" id="pd-code" hidden>
-<h3>Ingresar con código</h3><p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Escribe tu cédula o celular y el PIN de 4 números que te enviamos por WhatsApp.</p>
+<h3>Ingresar con código</h3>
+<div class="avc" role="note"><b>Recuerda:</b> desde el 18 de noviembre los códigos se actualizaron. Solicita el tuyo a través de WhatsApp.<br><a target="_blank" rel="noopener" href="https://api.whatsapp.com/send/?phone=573143425264&text=Hola+ALENA%2C+quiero+solicitar+mi+nuevo+c%C3%B3digo+para+ver+mi+pedido.+Mi+nombre+es%3A+">Solicitar mi nuevo código</a></div>
+<p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Escribe tu cédula o celular y el PIN de 4 números que te enviamos por WhatsApp.</p>
 <form onsubmit="return pdConsultar(event)"><label for="pd_d">Cédula o celular</label><input id="pd_d" inputmode="numeric" autocomplete="off" placeholder="Solo números">
 <label for="pd_c">PIN de 4 números</label><input id="pd_c" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="font-size:24px;letter-spacing:.4em;text-align:center">
 <div class="err" id="pd_e" role="alert"></div><button class="btn" id="pd_go">Ver mi pedido</button></form></div>
@@ -244,9 +249,12 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 <div class="mode"><label id="m1"><input type="radio" name="m" value="alquiler" onchange="setMode('alquiler')">Alquiler simple<br><small>Yo armo</small></label><label id="m2"><input type="radio" name="m" value="cotizar" onchange="setMode('cotizar')">Decoración completa<br><small>Con montaje</small></label></div>
 <div id="st1"><div id="lines"></div>
 <div class="tot"><span>Total estimado</span><span id="tot">$0</span></div>
+<div id="cd_tot"></div>
+<div class="cdbox"></div>
 <small style="color:var(--mu)">Valor de referencia por piezas; no incluye depósito, transporte ni montaje.</small>
 <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><button class="btn o" style="flex:1" onclick="closeCart()">+ Seguir agregando</button><button class="btn" style="flex:1" onclick="goForm()">Continuar →</button></div><div class="err" id="err1" role="alert"></div></div>
 <div id="st2" hidden><button class="btn o" style="padding:7px 16px;font-size:13px;margin:6px 0 2px" onclick="step(1)">← Volver a mi selección</button><div id="resumen" style="background:#fff;border-radius:14px;padding:10px 14px;margin-top:10px;font-size:14px"></div>
+<div class="cdbox"></div>
 <label>Nombre completo</label><input id="f_n" autocomplete="name">
 <label>Tipo de evento</label><input id="f_e" placeholder="Bautizo, quince años, grado...">
 <label>Fecha del evento</label><input id="f_f" type="date">
@@ -347,17 +355,30 @@ let cat=0,cart={},mode='alquiler';
 try{const g=JSON.parse(localStorage.getItem('alena_cart')||'{}');for(const k in g)if(P.some(x=>x[0]==k)&&g[k]>0)cart[k]=Math.min(99,g[k]|0)}catch(e){}
 function tabs(){document.getElementById('tabs').innerHTML=CATS.map((c,i)=>`<button class="${i==cat?'on':''}" onclick="location.hash='catalogo/${SLUGS[i]}'">${c}</button>`).join('')}
 function grid(){document.getElementById('grid').innerHTML=P.filter(p=>!cat||p[3]==cat).map(p=>`<div class="item"><img loading="lazy" src="${IMG[p[5]||p[0]]}" alt="${p[1]}"><div class="in"><h3>${p[1]}</h3><div class="pr">${cop(p[2])}</div><small>${p[4]}</small><button class="btn" onclick="add('${p[0]}')">Agregar</button></div></div>`).join('')}
+let SUB=0,CD={txt:'',ok:false,codigo:'',desc:0,pct:0,err:''};
+const pctTxt=n=>String(n).replace('.',',');
+function renderCod(){const cb=document.querySelectorAll('.cdbox');
+const h=CD.ok?`<div class="cdok">✓ Código <b>${esc(CD.codigo)}</b> aplicado${mode=='alquiler'?(CD.desc?` · descuento de <b>${pctTxt(CD.pct)} %</b>`:(CD.piezas?` · aplica a: ${esc(CD.piezas.join(', '))}. Agrégalas para ver tu descuento`:'')):' · se aplicará en tu cotización'} <button type="button" onclick="quitarCod()">Quitar</button></div>`
+:`<div class="cdrow"><input class="cdin" placeholder="¿Tienes un código de descuento?" value="${esc(CD.txt)}" maxlength="40" autocomplete="off" oninput="CD.txt=this.value" onkeydown="if(event.key=='Enter'){event.preventDefault();aplicarCod()}"><button type="button" class="btn o" onclick="aplicarCod()">Aplicar</button></div>${CD.err?`<div class="cder">${esc(CD.err)}</div>`:''}`;
+cb.forEach(x=>{x.innerHTML=h});if(typeof resumenCart==='function')resumenCart();
+const t=document.getElementById('cd_tot');if(t)t.innerHTML=CD.ok&&mode=='alquiler'&&CD.desc&&SUB?`<div class="tot cdt"><span>Descuento (${pctTxt(CD.pct)} %)</span><span>– ${cop(CD.desc)}</span></div><div class="tot"><span><b>Total con descuento</b></span><span><b>${cop(SUB-CD.desc)}</b></span></div>`:''}
+async function llamarCod(){try{const r=await fetch('/api/descuento',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({codigo:CD.txt,modalidad:mode,items:cart})});const d=await r.json();
+if(d.ok){CD={...CD,ok:true,codigo:d.codigo,desc:d.descuento||0,pct:d.pct||0,piezas:d.piezas||null,err:'',txt:d.codigo}}else{CD={...CD,ok:false,desc:0,pct:0,err:d.error||'No pudimos validar el código.'}}}
+catch(e){CD={...CD,ok:false,err:'No pudimos validar el código. Intenta de nuevo.'}}}
+async function aplicarCod(){if(!CD.txt.trim()){CD.err='Escribe tu código.';renderCod();return}CD.err='Validando…';renderCod();await llamarCod();renderCod();}
+function quitarCod(){CD={txt:'',ok:false,codigo:'',desc:0,pct:0,err:''};renderCod()}
+let _rc;function recalcCod(force){clearTimeout(_rc);if(!CD.ok&&!force){renderCod();return}_rc=setTimeout(async()=>{await llamarCod();renderCod()},force?0:300);renderCod()}
 function add(id){cart[id]=(cart[id]||0)+1;upd();const p=P.find(x=>x[0]==id),b=document.getElementById('addbar');document.getElementById('addmsg').textContent='✓ '+p[1]+' agregado';b.classList.add('on');clearTimeout(add._t);add._t=setTimeout(()=>b.classList.remove('on'),3500)}
 function chg(id,d){cart[id]+=d;if(cart[id]<=0)delete cart[id];upd()}
 function upd(){let n=0,t=0,h='';for(const id in cart){const p=P.find(x=>x[0]==id);n+=cart[id];t+=cart[id]*p[2];h+=`<div class="ln"><span>${p[1]}</span><span class="q"><button onclick="chg('${id}',-1)">–</button>${cart[id]}<button onclick="chg('${id}',1)">+</button></span><span>${cop(cart[id]*p[2])}</span></div>`}
-try{localStorage.setItem('alena_cart',JSON.stringify(cart))}catch(e){}document.getElementById('cnt').textContent=n;document.getElementById('tot').textContent=cop(t);
+try{localStorage.setItem('alena_cart',JSON.stringify(cart))}catch(e){}document.getElementById('cnt').textContent=n;document.getElementById('tot').textContent=cop(t);SUB=t;recalcCod();
 document.getElementById('lines').innerHTML=h||'<p style="color:var(--mu);font-size:14px;margin:10px 0">Aún no has agregado piezas. Para una decoración completa puedes enviar solo tu idea.</p>'}
-function setMode(m){mode=m;document.getElementById('m1').className=m=='alquiler'?'on':'';document.getElementById('m2').className=m=='cotizar'?'on':'';document.querySelector(`input[value=${m}]`).checked=true;document.getElementById('entrega').hidden=m!='alquiler';document.getElementById('entregaNota').hidden=m=='alquiler'}
+function setMode(m){const ch=mode!=m;mode=m;if(ch&&typeof CD!=='undefined'&&CD.ok){CD.ok=false;CD.err='';CD.txt=CD.codigo;recalcCod(true)}document.getElementById('m1').className=m=='alquiler'?'on':'';document.getElementById('m2').className=m=='cotizar'?'on':'';document.querySelector(`input[value=${m}]`).checked=true;document.getElementById('entrega').hidden=m!='alquiler';document.getElementById('entregaNota').hidden=m=='alquiler'}
 function openCart(m){if(m)setMode(m);step(m=='cotizar'?2:1);document.getElementById('addbar').classList.remove('on');document.getElementById('dr').classList.add('on');document.getElementById('ov').classList.add('on')}
 function armarAlquiler(){setMode('alquiler');location.hash='catalogo/todo'}
-function step(n){document.getElementById('st1').hidden=n!=1;document.getElementById('st2').hidden=n!=2;document.getElementById('err1').textContent='';
-const k=Object.values(cart).reduce((a,b)=>a+b,0),t=Object.keys(cart).reduce((a,id)=>a+cart[id]*P.find(x=>x[0]==id)[2],0);
-document.getElementById('resumen').innerHTML=k?`<b>${k}</b> pieza${k>1?'s':''} · Total estimado <b>${cop(t)}</b>`:'Solo tu idea de decoración (sin piezas del catálogo)';document.getElementById('dr').scrollTop=0}
+function resumenCart(){const k=Object.values(cart).reduce((a,b)=>a+b,0),t=Object.keys(cart).reduce((a,id)=>a+cart[id]*P.find(x=>x[0]==id)[2],0);
+document.getElementById('resumen').innerHTML=k?`<b>${k}</b> pieza${k>1?'s':''} · Total estimado <b>${cop(t)}</b>${CD.ok&&mode=='alquiler'&&CD.desc?` · Con descuento <b>${cop(t-CD.desc)}</b>`:''}`:'Solo tu idea de decoración (sin piezas del catálogo)'}
+function step(n){document.getElementById('st1').hidden=n!=1;document.getElementById('st2').hidden=n!=2;document.getElementById('err1').textContent='';resumenCart();document.getElementById('dr').scrollTop=0}
 function goForm(){if(mode=='alquiler'&&!Object.keys(cart).length){document.getElementById('err1').textContent='Agrega al menos una pieza del catálogo o cambia a «Decoración completa».';return}step(2)}
 function closeCart(){document.getElementById('dr').classList.remove('on');document.getElementById('ov').classList.remove('on')}
 function send(){const v=i=>document.getElementById(i).value.trim(),e=document.getElementById('err');
@@ -366,7 +387,8 @@ if(mode=='alquiler'&&!Object.keys(cart).length){e.textContent='Agrega al menos u
 if(!document.getElementById('f_t').checked){e.textContent='Debes aceptar los términos y condiciones.';return}
 e.textContent='';let t=0,l='';for(const id in cart){const p=P.find(x=>x[0]==id);t+=cart[id]*p[2];l+=`• ${cart[id]} x ${p[1]} (${cop(cart[id]*p[2])})\n`}
 let m=`Hola ALENA 👋 Vi su página web y quiero ${mode=='alquiler'?'cotizar un ALQUILER SIMPLE':'cotizar una DECORACIÓN COMPLETA con montaje'}.\n\nNombre: ${v('f_n')}\nTipo de evento: ${v('f_e')}\nFecha: ${v('f_f')}\nLugar: ${v('f_l')}\nEntrega: ${mode=='alquiler'?document.getElementById('f_d').value:'Montaje y desmontaje por ALENA (transporte con costo adicional)'}\n`;
-if(l)m+=`\nPiezas de interés:\n${l}Total estimado: ${cop(t)}\n`;if(v('f_o'))m+=`\nNotas: ${v('f_o')}\n`;
+if(l)m+=`\nPiezas de interés:\n${l}Total estimado: ${cop(t)}\n`;
+if(CD.ok){m+=`\nCódigo de descuento: ${CD.codigo}`+(mode=='alquiler'&&CD.desc?` (${CD.pct} % de descuento → total estimado con descuento: ${cop(t-CD.desc)})`:'')+'\n'}if(v('f_o'))m+=`\nNotas: ${v('f_o')}\n`;
 m+=`\nAcepto los términos y condiciones de la página. Quedo atento(a) a la cotización y disponibilidad.`;
 window.open(`https://api.whatsapp.com/send/?phone=${WA}&text=${encodeURIComponent(m)}&type=phone_number&app_absent=0`,'_blank')}
 function tab(n){for(let i=1;i<3;i++){document.getElementById('p'+i).style.display=i==n?'block':'none';document.getElementById('t'+i).className='btn'+(i==n?'':' o')}}
@@ -435,6 +457,14 @@ function pdStar(id,n){const t=($('op_t'+id)||{}).value;OPST[id]=n;pdVer();const 
 async function pdOpinar(id){const e=$('op_e'+id),n=OPST[id]??((PD.find(p=>p.id==id)||{}).opinion||{}).estrellas;e.textContent='';
 try{const d=await api('/api/opinion',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+TOK},body:JSON.stringify({pedido_id:id,estrellas:n,texto:$('op_t'+id).value})});
 PD.find(p=>p.id==id).opinion=d.opinion;delete OPST[id];pdVer()}catch(x){e.textContent=x.message}}
+function cuentaCli(p){const neto=Math.max(0,p.total-(p.descuento||0)),saldo=neto-p.abonado,dv=p.deposito_devuelto||0;
+const r=(a,b,c)=>`<div class="${c||''}"><span>${a}</span><b>${b}</b></div>`;
+let h=r('Valor de las piezas y servicios',cop(p.total));
+if(p.descuento)h+=r('Descuento'+(p.total?` ${String(Math.round(p.descuento/p.total*1000)/10).replace('.',',')} %`:'')+(p.descuento_nota?` <small>(${esc(p.descuento_nota)})</small>`:''),'– '+cop(p.descuento),'ds');
+h+=r('Total a pagar',cop(neto),'t')+r('Abonado',cop(p.abonado))+(saldo>0?r('Saldo por pagar',cop(saldo),'sd'):saldo<0?r('Pagado de más',cop(-saldo)):r('Saldo','Pagado ✓','ok'));
+if(p.deposito){h+='<hr>'+r('Depósito de garantía <small>(se devuelve al entregar las piezas en buen estado)</small>',cop(p.deposito));
+h+=dv>=p.deposito?r('Estado del depósito','Devuelto completo'+(p.deposito_dev_fecha?' el '+fmtF(p.deposito_dev_fecha):'')+' ✓','ok'):dv>0?r('Depósito devuelto',cop(dv)+(p.deposito_dev_fecha?' el '+fmtF(p.deposito_dev_fecha):''))+r('Pendiente por devolver',cop(p.deposito-dv),'sd'):r('Estado del depósito','Aún no devuelto','sd')}
+return h}
 function pdVer(){$('pd-code').hidden=true;$('pd-admin').hidden=true;$('pd-ch').hidden=true;
 const r=$('pd-res');r.hidden=false;
 r.innerHTML=PD.map(p=>{const saldo=Math.max(0,p.total-p.abonado);
@@ -445,8 +475,8 @@ return`<article class="pdc"><div class="meta">Pedido ${esc(p.ref)} · ${p.modali
 ${linea(p)}
 ${p.recogida?`<div class="rec"><b>Recogida programada</b>${esc(p.recogida)}</div>`:''}
 ${p.mensaje?`<div class="msg">${esc(p.mensaje)}</div>`:''}
-${p.total?`<h4>Cotización</h4><div class="eco"><div><small>Total</small><b>${cop(p.total)}</b></div><div><small>Abonado</small><b>${cop(p.abonado)}</b></div><div><small>Saldo</small><b>${cop(saldo)}</b></div>${p.deposito?`<div><small>Depósito de garantía</small><b>${cop(p.deposito)}</b></div>`:''}</div>`:''}
-${p.items&&p.items.length?`<h4>Piezas y servicios</h4><ol class="its">`+p.items.map(it=>`<li><b>${cop(it.c*it.p)}</b>${it.c} × ${esc(it.n)}</li>`).join('')+'</ol>':''}
+${p.total?`<h4>Cuentas de tu pedido</h4><div class="cta">${cuentaCli(p)}</div>`:''}
+${p.items&&p.items.length?`<h4>Qué incluye tu pedido</h4><ol class="its">`+p.items.map(it=>`<li><b>${cop(it.c*it.p)}</b>${it.c} × ${esc(it.n)}</li>`).join('')+'</ol>':''}
 ${p.detalle?`<h4>Más detalles</h4><div class="det">${esc(p.detalle)}</div>`:''}
 ${p.docs.length?`<h4>Documentos</h4>`+p.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${CAT_DOC[d.categoria]||'Documento'} · ${Math.max(1,Math.round(d.tam/1024))} KB</small></span><button class="btn o" onclick="pdDoc(${d.id})">Descargar</button></div>`).join(''):''}
 ${opForm(p)}

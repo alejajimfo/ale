@@ -48,6 +48,10 @@ const SCHEMA = [
   )`,
   `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pin text`,
   `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recogida text`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS descuento int NOT NULL DEFAULT 0`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS descuento_nota text`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS deposito_devuelto int NOT NULL DEFAULT 0`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS deposito_dev_fecha date`,
   `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS items jsonb NOT NULL DEFAULT '[]'::jsonb`,
   `CREATE INDEX IF NOT EXISTS pedidos_cedula_idx ON pedidos (cedula)`,
   `CREATE INDEX IF NOT EXISTS pedidos_telefono_idx ON pedidos (telefono)`,
@@ -73,6 +77,17 @@ const SCHEMA = [
     estado text NOT NULL DEFAULT 'pendiente',
     creado timestamptz NOT NULL DEFAULT now()
   )`,
+  `CREATE TABLE IF NOT EXISTS descuentos (
+    id serial PRIMARY KEY,
+    codigo text NOT NULL,
+    norm text NOT NULL UNIQUE,
+    valor_alquiler int NOT NULL DEFAULT 0,
+    valor_decoracion int NOT NULL DEFAULT 0,
+    activo boolean NOT NULL DEFAULT true,
+    nota text,
+    creado timestamptz NOT NULL DEFAULT now()
+  )`,
+  `ALTER TABLE descuentos ADD COLUMN IF NOT EXISTS items jsonb NOT NULL DEFAULT '{}'::jsonb`,
   `CREATE TABLE IF NOT EXISTS ajustes (clave text PRIMARY KEY, valor jsonb NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS intentos (
     id bigserial PRIMARY KEY,
@@ -172,6 +187,9 @@ export async function anotar(ip, clase) {
 }
 
 /* ---------- Normalización ---------- */
+// Código de descuento sin importar mayúsculas, tildes ni espacios de sobra: "Alena 10" = "ALENA  10" = "álena 10"
+export const normCodigo = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/\s+/g, ' ').trim().slice(0, 40);
+
 // Deja solo dígitos; si viene un celular con 57 delante (12 dígitos) le quita el 57.
 export function soloDigitos(v) {
   let d = String(v ?? '').replace(/\D/g, '');
@@ -193,7 +211,8 @@ export function pin4() {
 /* ---------- Pedido -> objeto JSON ---------- */
 export const COLS_PEDIDO = `id, items, pin, recogida, nombre, cedula, telefono, modalidad, tipo_evento,
   to_char(fecha_evento, 'YYYY-MM-DD') AS fecha_evento, lugar, paso, historial, mensaje, detalle,
-  total, abonado, deposito, notas_internas, visible`;
+  total, descuento, descuento_nota, abonado, deposito, deposito_devuelto,
+  to_char(deposito_dev_fecha, 'YYYY-MM-DD') AS deposito_dev_fecha, notas_internas, visible`;
 
 export function paraCliente(p, docs = [], ops = []) {
   const pasos = PASOS[p.modalidad] || PASOS.alquiler;
@@ -216,8 +235,12 @@ export function paraCliente(p, docs = [], ops = []) {
     opinion: op ? { estrellas: op.estrellas, texto: op.texto, estado: op.estado } : null,
     items: Array.isArray(p.items) ? p.items : [],
     total: p.total,
+    descuento: p.descuento || 0,
+    descuento_nota: p.descuento_nota,
     abonado: p.abonado,
     deposito: p.deposito,
+    deposito_devuelto: p.deposito_devuelto || 0,
+    deposito_dev_fecha: p.deposito_dev_fecha,
     docs: docs.filter((d) => d.pedido_id === p.id).map((d) => ({ id: d.id, nombre: d.nombre, tipo: d.tipo, categoria: d.categoria, tam: d.tam })),
   };
 }
