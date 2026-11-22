@@ -98,6 +98,9 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 .dc{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#fff;border-radius:14px;padding:10px 14px;margin-top:8px;font-size:14px}.dc span{flex:1;min-width:0;overflow-wrap:anywhere}.dc small{display:block;color:var(--mu)}.dc .btn{padding:7px 16px;font-size:13px}
 .det{white-space:pre-wrap;font-size:15px;margin-top:6px}
 .tl{display:flex;margin:26px 0 8px}
+.rec{display:block;margin-top:6px;background:#fff;border:1px dashed var(--acc);border-radius:10px;padding:5px 8px;font-size:11.5px;color:var(--accd);font-weight:500}
+.stp{display:flex;gap:4px;margin:8px 0}.stp button{background:none;border:0;font-size:32px;line-height:1;color:#e3c4b3;cursor:pointer;padding:0 2px}.stp button.on{color:#d4af37}
+.opx textarea{width:100%;padding:10px 12px;border:1px solid #e3c4b3;border-radius:12px;font:400 15px Outfit;margin:6px 0 10px}
 .tp{flex:1;position:relative;text-align:center;font-size:12px;color:var(--mu);line-height:1.3}
 .tp>i{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #e3c4b3;margin:0 auto 8px;font:600 13px Outfit;position:relative;z-index:1;color:var(--mu)}
 .tp:before{content:"";position:absolute;top:14px;left:-50%;width:100%;height:3px;background:#e3c4b3}.tp:first-child:before{display:none}
@@ -109,7 +112,6 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 .addbar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140px);z-index:35;background:var(--tx);color:#fff;border-radius:30px;padding:8px 8px 8px 20px;display:flex;gap:14px;align-items:center;font-size:14px;transition:.3s;max-width:calc(100% - 100px);box-shadow:0 8px 24px rgba(0,0,0,.25)}.addbar.on{transform:translate(-50%,0)}.addbar button{background:var(--acc);color:#fff;border:0;border-radius:24px;padding:8px 16px;font:500 13px Outfit;cursor:pointer;white-space:nowrap}
 .linkb{background:none;border:0;color:var(--accd);text-decoration:underline;font:400 13px Outfit;cursor:pointer;margin-top:12px}
 .its{padding-left:24px;margin-top:6px;font-size:15px}.its li{padding:7px 0;border-bottom:1px solid #efd3c4}.its li:last-child{border:0}.its li b{float:right;font-weight:500;margin-left:12px}
-.tp.x>i{border-style:dashed;color:var(--accd)}.stars{display:flex;gap:4px;margin:6px 0}.stars button{background:none;border:0;font-size:30px;line-height:1;color:#d4af37;cursor:pointer;padding:0 2px}.opf textarea{width:100%;padding:10px 12px;border:1px solid #e3c4b3;border-radius:12px;font:400 15px Outfit;background:#fff;color:var(--tx);margin:6px 0}.opf small{display:block;color:var(--mu);margin-top:8px}.opf .err{color:#b3402f;font-size:13px;min-height:18px}
 </style>
 </head>
 <body>
@@ -201,7 +203,7 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 <p><b>Esta página no genera una compra.</b> La selección que envías es una solicitud de cotización; los precios del catálogo son de referencia y la disponibilidad y el valor final se confirman por WhatsApp.</p>
 <p>Una fecha queda reservada solo cuando ALENA la confirma por escrito. Transporte (llevar y recoger el alquiler), montaje y diseños personalizados se cotizan aparte. Las condiciones de cancelación o cambio de fecha se acuerdan en la cotización.</p></div></details>
 <details><summary>Protección de datos personales</summary><div>
-<p>Los datos de tu solicitud (nombre, teléfono, fecha y lugar del evento) viajan directamente a WhatsApp y se usan únicamente para cotizar, coordinar y prestar el servicio, conforme a la Ley 1581 de 2012.</p><p>Si contratas con nosotros, registramos en nuestro sistema tu nombre, cédula, celular, datos del evento, cotización y documentos (por ejemplo, la conformidad firmada) para hacer seguimiento a tu pedido y permitirte consultarlo en la sección «Mi pedido» con tu cédula o celular y un PIN personal que te enviamos por WhatsApp. No vendemos ni compartimos tus datos con terceros. Puedes solicitar su consulta, corrección o eliminación escribiendo a nuestro WhatsApp.</p></div></details>
+<p>Los datos de tu solicitud (nombre, teléfono, fecha y lugar del evento) viajan directamente a WhatsApp y se usan únicamente para cotizar, coordinar y prestar el servicio, conforme a la Ley 1581 de 2012.</p><p>Si contratas con nosotros, registramos en nuestro sistema tu nombre, cédula, celular, datos del evento, cotización y documentos (por ejemplo, la conformidad firmada) para hacer seguimiento a tu pedido y permitirte consultarlo en la sección «Mi pedido» con tu cédula o celular y un código de verificación que te enviamos por WhatsApp. No vendemos ni compartimos tus datos con terceros. Puedes solicitar su consulta, corrección o eliminación escribiendo a nuestro WhatsApp.</p></div></details>
 <p class="legal">Para formalizar, el cliente firma el documento físico de registro de alquiler o de servicio con nombre, cédula, teléfono, fechas de entrega y devolución, y valor del depósito.</p>
 </div></section>
 <section class="alt" data-view="pedido" id="pedido"><div class="wrap" style="max-width:760px">
@@ -211,10 +213,14 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 <button class="btn o" onclick="pdModo('admin')">Inicia sesión</button></div>
 
 <div class="op-card pdbox" id="pd-code" hidden>
-<h3>Ingresar con código</h3><p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Escribe tu cédula o celular y el PIN de 4 números que te enviamos por WhatsApp.</p>
-<form onsubmit="return pdConsultar(event)"><label for="pd_d">Cédula o celular</label><input id="pd_d" inputmode="numeric" autocomplete="off" placeholder="Solo números">
-<label for="pd_c">PIN de 4 números</label><input id="pd_c" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" style="font-size:24px;letter-spacing:.4em;text-align:center">
-<div class="err" id="pd_e" role="alert"></div><button class="btn" id="pd_go">Ver mi pedido</button></form></div>
+<h3>Ingresar con código</h3>
+<form id="pd-f1" onsubmit="return pdPedir(event)"><p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Escribe tu cédula o tu celular y te enviamos un código de 4 números por WhatsApp.</p>
+<label for="pd_d">Cédula o celular</label><input id="pd_d" inputmode="numeric" autocomplete="off" placeholder="Solo números">
+<div class="err" id="pd_e1" role="alert"></div><button class="btn" id="pd_go1">Enviarme el código</button></form>
+<form id="pd-f2" hidden onsubmit="return pdConsultar(event)"><p id="pd_msg" style="font-style:normal;color:var(--mu);font-size:14px;margin:0"></p>
+<label for="pd_c">Código de 4 números</label><input id="pd_c" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••" style="font-size:28px;letter-spacing:.5em;text-align:center">
+<div class="err" id="pd_e" role="alert"></div><button class="btn" id="pd_go">Ver mi pedido</button>
+<p style="text-align:center"><button type="button" class="linkb" onclick="pdAtras()">Cambiar datos o pedir otro código</button></p></form></div>
 
 <div class="op-card pdbox" id="pd-admin" hidden>
 <h3>Inicia sesión</h3><p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Acceso exclusivo del equipo ALENA.</p>
@@ -370,9 +376,11 @@ m+=`\nAcepto los términos y condiciones de la página. Quedo atento(a) a la cot
 window.open(`https://api.whatsapp.com/send/?phone=${WA}&text=${encodeURIComponent(m)}&type=phone_number&app_absent=0`,'_blank')}
 function tab(n){for(let i=1;i<3;i++){document.getElementById('p'+i).style.display=i==n?'block':'none';document.getElementById('t'+i).className='btn'+(i==n?'':' o')}}
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-let OPS_API=[];
-function pintaOps(){const L=[...OPS_API,...OPINIONES];document.getElementById('ops').innerHTML=L.map(o=>{const s=Math.max(1,Math.min(5,o.s||5));return`<div class="op-card"><div class="st" style="color:#d4af37;letter-spacing:.1em" aria-label="${s} estrellas">${'★'.repeat(s)}${'☆'.repeat(5-s)}</div><p>“${esc(o.t)}”</p><strong>${esc(o.n)}</strong>${o.e?`<br><em>${esc(o.e)}</em>`:''}</div>`}).join('')}
+const estrellas=n=>'★'.repeat(n)+'<span style="opacity:.3">'+'★'.repeat(5-n)+'</span>';
+function pintaOps(extra){document.getElementById('ops').innerHTML=OPINIONES.concat(extra||[]).map(o=>`<div class="op-card"><div class="st" style="color:#d4af37;letter-spacing:.1em" aria-label="${o.s||5} estrellas">${estrellas(o.s||5)}</div><p>“${esc(o.t)}”</p><strong>${esc(o.n)}</strong>${o.e?`<br><em>${esc(o.e)}</em>`:''}</div>`).join('')}
 pintaOps();
+// Opiniones de clientes aprobadas por el equipo
+fetch('/api/extras').then(r=>r.ok?r.json():null).then(d=>{if(d&&Array.isArray(d.opiniones)&&d.opiniones.length)pintaOps(d.opiniones)}).catch(()=>{});
 // Las publicaciones se administran desde el panel (admin.html > Ajustes). Si no hay ninguna, se muestran fotos del catálogo.
 let IG_POSTS=[];
 const IG_FALLBACK=['neon-quince','silla-trono','torteros-cristal','arco-ovalado','num-5','neon-casarte','tela-nino','velas-led'];
@@ -400,7 +408,7 @@ if(v=='catalogo'){const i=Math.max(0,SLUGS.indexOf(s||'todo'));cat=i;tabs();grid
 document.getElementById('menu').classList.remove('open');closeCart();window.scrollTo(0,0)}
 addEventListener('hashchange',route);
 /* ===== Mi pedido (consulta de clientes + acceso del equipo) ===== */
-let PORTAL=false,TOK='',PD=[];
+let PORTAL=false,TOK='',PD=[],PX={rec:{},op:{}},ST={};
 const $=i=>document.getElementById(i);
 const CAT_DOC={cotizacion:'Cotización',conformidad:'Conformidad firmada',recibo:'Recibo',foto:'Fotos',otro:'Documento'};
 async function api(u,o){let r;try{r=await fetch(u,o)}catch(e){throw new Error('No pudimos conectar con el servidor. Intenta de nuevo.')}
@@ -408,20 +416,27 @@ let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.error||'No se
 function fmtF(s){if(!s)return'';const[y,m,d]=s.slice(0,10).split('-');return`${d}/${m}/${y}`}
 function fmtI(iso){const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'})}
 function pintarPedido(){const b=$('pd-b1');b.disabled=!PORTAL;
-$('pd-sub').textContent=PORTAL?'Ingresa con tu cédula o celular y tu PIN para ver el estado de tu alquiler o decoración, tu cotización y tus documentos.':'Pronto podrás consultar aquí el estado de tu alquiler o decoración, tu cotización y tus documentos.';
+$('pd-sub').textContent=PORTAL?'Ingresa con tu cédula o celular; te enviaremos un código por WhatsApp para ver el estado de tu alquiler o decoración, tu cotización y tus documentos.':'Pronto podrás consultar aquí el estado de tu alquiler o decoración, tu cotización y tus documentos.';
 b.textContent=PORTAL?'Ingresar con código':'Ingresar con código (próximamente)';if(!PORTAL&&!$('pd-code').hidden)pdModo('')}
-function pdModo(m){$('pd-code').hidden=m!='code'||!PORTAL;$('pd-admin').hidden=m!='admin';$('pd-res').hidden=true;$('pd-ch').hidden=false;if(m=='code'){$('pd_c').value='';$('pd_e').textContent=''}
+function pdModo(m){$('pd-code').hidden=m!='code'||!PORTAL;$('pd-admin').hidden=m!='admin';$('pd-res').hidden=true;$('pd-ch').hidden=false;if(m=='code')pdAtras();
 const f=m=='code'?'pd_d':m=='admin'?'pa_e':null;if(f&&!$(f).closest('[hidden]'))setTimeout(()=>$(f).focus(),50)}
-const JH={'content-type':'application/json'};
+const JH={'content-type':'application/json'};let PD_DATO='';
+async function pdPedir(ev){ev.preventDefault();const e=$('pd_e1'),b=$('pd_go1');e.textContent='';PD_DATO=$('pd_d').value;b.disabled=true;b.textContent='Enviando…';
+try{const d=await api('/api/codigo',{method:'POST',headers:JH,body:JSON.stringify({dato:PD_DATO})});
+$('pd-f1').hidden=true;$('pd-f2').hidden=false;$('pd_c').value='';$('pd_e').textContent='';
+$('pd_msg').textContent=d.auto?'Si los datos coinciden con un pedido, te enviamos un código de 4 números a tu WhatsApp. Escríbelo aquí.':'Recibimos tu solicitud. Si los datos coinciden con un pedido, te enviaremos el código por WhatsApp en unos minutos (en horario de atención). Escríbelo aquí cuando lo recibas.';
+setTimeout(()=>$('pd_c').focus(),50)}catch(x){e.textContent=x.message}finally{b.disabled=false;b.textContent='Enviarme el código'}return false}
+function pdAtras(){$('pd-f1').hidden=false;$('pd-f2').hidden=true;$('pd_c').value='';$('pd_e').textContent='';$('pd_e1').textContent=''}
 async function pdConsultar(ev){ev.preventDefault();const e=$('pd_e'),b=$('pd_go');e.textContent='';b.disabled=true;b.textContent='Verificando…';
-try{const d=await api('/api/consulta',{method:'POST',headers:JH,body:JSON.stringify({dato:$('pd_d').value,pin:$('pd_c').value})});
-TOK=d.token;PD=d.pedidos;try{localStorage.setItem('alena_sesion',JSON.stringify({t:d.token,exp:d.exp}))}catch(x){}$('pd_d').value='';$('pd_c').value='';pdVer()}catch(x){e.textContent=x.message}finally{b.disabled=false;b.textContent='Ver mi pedido'}return false}
-function pdSalir(){TOK='';PD=[];try{localStorage.removeItem('alena_sesion')}catch(x){}$('pd-res').hidden=true;$('pd-res').innerHTML='';$('pd-ch').hidden=false;$('pd-wa').hidden=false;pdModo('code')}
+try{const d=await api('/api/consulta',{method:'POST',headers:JH,body:JSON.stringify({dato:PD_DATO,codigo:$('pd_c').value})});
+TOK=d.token;PD=d.pedidos;PX={rec:{},op:{}};try{localStorage.setItem('alena_sesion',JSON.stringify({t:d.token,exp:d.exp}))}catch(x){}$('pd_d').value='';pdVer();pdExtras()}catch(x){e.textContent=x.message}finally{b.disabled=false;b.textContent='Ver mi pedido'}return false}
+function pdSalir(){TOK='';PD=[];PX={rec:{},op:{}};try{localStorage.removeItem('alena_sesion')}catch(x){}$('pd-res').hidden=true;$('pd-res').innerHTML='';$('pd-ch').hidden=false;$('pd-wa').hidden=false;pdModo('code')}
 async function pdRestaurar(){let g;try{g=JSON.parse(localStorage.getItem('alena_sesion')||'null')}catch(x){}
 if(!g||!g.t||g.exp<Date.now()){try{localStorage.removeItem('alena_sesion')}catch(x){}return}
-try{const d=await api('/api/consulta',{headers:{Authorization:'Bearer '+g.t}});TOK=g.t;PD=d.pedidos;pdVer()}catch(x){try{localStorage.removeItem('alena_sesion')}catch(y){}}}
+try{const d=await api('/api/consulta',{headers:{Authorization:'Bearer '+g.t}});TOK=g.t;PD=d.pedidos;pdVer();pdExtras()}catch(x){try{localStorage.removeItem('alena_sesion')}catch(y){}}}
 function linea(p){const fin=p.paso>=p.pasos.length-1;return'<div class="tl">'+p.pasos.map((n,i)=>{const c=fin||i<p.paso?'d':i==p.paso?'c':'';
-return`<div class="tp ${c}"><i>${c=='d'?'✓':i+1}</i><div>${esc(n)}${p.fechas[i]&&i<=p.paso?`<small>${fmtI(p.fechas[i])}</small>`:''}</div></div>`+(i==5&&p.modalidad=='alquiler'&&p.recogida?`<div class="tp x ${fin||p.paso>5?'d':''}"><i>🚚</i><div>Recogida programada</div></div>`:'')}).join('')+'</div>'+(p.modalidad=='alquiler'&&p.recogida?`<div class="msg">🚚 <b>Recogida programada:</b> ${esc(p.recogida)}</div>`:'')}
+const rc=p.modalidad=='alquiler'&&i==6&&PX.rec[p.id]?`<span class="rec">📦 Recogida programada: ${esc(PX.rec[p.id])}</span>`:'';
+return`<div class="tp ${c}"><i>${c=='d'?'✓':i+1}</i><div>${esc(n)}${p.fechas[i]&&i<=p.paso?`<small>${fmtI(p.fechas[i])}</small>`:''}${rc}</div></div>`}).join('')+'</div>'}
 function pdVer(){$('pd-code').hidden=true;$('pd-admin').hidden=true;$('pd-ch').hidden=true;
 const r=$('pd-res');r.hidden=false;
 r.innerHTML=PD.map(p=>{const saldo=Math.max(0,p.total-p.abonado);
@@ -435,16 +450,24 @@ ${p.total?`<h4>Cotización</h4><div class="eco"><div><small>Total</small><b>${co
 ${p.items&&p.items.length?`<h4>Piezas y servicios</h4><ol class="its">`+p.items.map(it=>`<li><b>${cop(it.c*it.p)}</b>${it.c} × ${esc(it.n)}</li>`).join('')+'</ol>':''}
 ${p.detalle?`<h4>Más detalles</h4><div class="det">${esc(p.detalle)}</div>`:''}
 ${p.docs.length?`<h4>Documentos</h4>`+p.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${CAT_DOC[d.categoria]||'Documento'} · ${Math.max(1,Math.round(d.tam/1024))} KB</small></span><button class="btn o" onclick="pdDoc(${d.id})">Descargar</button></div>`).join(''):''}
-${opForm(p)}
+${opinionHtml(p)}
 </article>`}).join('')+'<p class="res"><button class="btn o" onclick="pdSalir()">Salir</button></p>'}
-const OPSEL={};
-function opForm(p){if(p.paso<5)return'';const o=p.opinion;
-if(o)return`<h4>Tu opinión</h4><div class="msg"><span style="color:#d4af37">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</span><br>${o.estado=='aprobada'?'Ya está publicada en nuestra página. ¡Gracias!':o.estado=='rechazada'?'Gracias por escribirnos.':'Gracias. La revisaremos y, si todo está bien, la publicaremos.'}</div>`;
-return`<h4>¿Cómo te fue con ALENA?</h4><div class="opf"><div class="stars" id="st${p.id}">${[1,2,3,4,5].map(n=>`<button type="button" aria-label="${n} estrellas" onclick="pdStar(${p.id},${n})">☆</button>`).join('')}</div><textarea id="ot${p.id}" rows="3" maxlength="600" placeholder="Cuéntanos tu experiencia…"></textarea><div class="err" id="oe${p.id}"></div><button class="btn" onclick="pdOp(${p.id})">Enviar opinión</button><small>Solo se publica si el equipo la aprueba, con tu nombre y la inicial de tu apellido.</small></div>`}
-function pdStar(id,n){OPSEL[id]=n;[...$('st'+id).children].forEach((b,i)=>{b.textContent=i<n?'★':'☆'})}
-async function pdOp(id){const e=$('oe'+id),n=OPSEL[id]||0,t=$('ot'+id).value.trim();e.textContent='';
-if(!n){e.textContent='Elige de 1 a 5 estrellas.';return}if(t.length<10){e.textContent='Cuéntanos un poco más (mínimo 10 letras).';return}
-try{await api('/api/opinion',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({pedido_id:id,estrellas:n,texto:t})});PD.find(x=>x.id==id).opinion={estrellas:n,texto:t,estado:'pendiente'};pdVer()}catch(x){e.textContent=x.message}}
+async function pdExtras(){try{const d=await api('/api/extras',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({accion:'mio'})});
+PX={rec:d.recogidas||{},op:d.opiniones||{}};if(!$('pd-res').hidden){const y=scrollY;pdVer();scrollTo(0,y)}}catch(e){}}
+function opinionHtml(p){if(p.modalidad!='alquiler'||p.paso<5)return'';const o=PX.op[p.id];
+if(o&&!ST['e'+p.id])return`<h4>Tu opinión</h4><div class="opx"><div class="st" style="color:#d4af37;font-size:22px">${estrellas(o.s)}</div><p style="font-style:italic">“${esc(o.t)}”</p>
+<div class="meta">${o.aprobada?'✓ Publicada en la sección de opiniones. ¡Gracias!':'Recibida. Aparecerá en el sitio cuando el equipo la apruebe.'}</div><button class="btn o" onclick="pdEditaOp(${p.id})">Editar mi opinión</button></div>`;
+const s=ST[p.id]||(o?o.s:0);
+return`<h4>Cuéntanos tu experiencia</h4><div class="opx"><div class="stp" id="stp${p.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="${n<=s?'on':''}" onclick="pdStar(${p.id},${n})" aria-label="${n} estrellas">★</button>`).join('')}</div>
+<textarea id="opt${p.id}" rows="3" maxlength="600" placeholder="¿Cómo fue tu experiencia con ALENA?">${o?esc(o.t):''}</textarea>
+<div class="meta" id="ope${p.id}" style="color:var(--bad)"></div><button class="btn" id="opb${p.id}" onclick="pdOpinar(${p.id})">Enviar opinión</button>
+<div class="meta" style="margin-top:6px">Solo se publica si el equipo de ALENA la aprueba. Se mostrará tu nombre y la inicial de tu apellido.</div></div>`}
+function pdStar(id,n){ST[id]=n;document.querySelectorAll('#stp'+id+' button').forEach((b,i)=>b.classList.toggle('on',i<n))}
+function pdEditaOp(id){ST['e'+id]=1;const y=scrollY;pdVer();scrollTo(0,y)}
+async function pdOpinar(id){const e=$('ope'+id),b=$('opb'+id),s=ST[id]||(PX.op[id]&&PX.op[id].s)||0;e.textContent='';
+if(!s){e.textContent='Elige de 1 a 5 estrellas.';return}b.disabled=true;b.textContent='Enviando…';
+try{await api('/api/extras',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({accion:'opinar',pedido_id:id,estrellas:s,texto:$('opt'+id).value})});
+delete ST[id];delete ST['e'+id];await pdExtras()}catch(x){e.textContent=x.message;b.disabled=false;b.textContent='Enviar opinión'}}
 async function pdDoc(id){const d=PD.flatMap(p=>p.docs).find(x=>x.id==id);
 try{const r=await fetch('/api/documento?id='+id,{headers:{Authorization:'Bearer '+TOK}});if(!r.ok)throw 0;const u=URL.createObjectURL(await r.blob());
 const a=document.createElement('a');a.href=u;a.download=d?d.nombre:'documento';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
@@ -452,7 +475,7 @@ catch(e){alert('No pudimos descargar el documento. Vuelve a ingresar e intenta d
 async function pdAdmin(ev){ev.preventDefault();const e=$('pa_err'),b=$('pa_go');e.textContent='';b.disabled=true;b.textContent='Entrando…';
 try{const d=await api('/api/admin-login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:$('pa_e').value,clave:$('pa_c').value})});
 try{sessionStorage.setItem('alena_admin',d.token)}catch(x){}location.href='/admin.html'}catch(x){e.textContent=x.message;b.disabled=false;b.textContent='Entrar'}return false}
-fetch('/api/publico').then(r=>r.ok?r.json():null).then(d=>{if(!d)return;PORTAL=!!d.portal;OPS_API=(d.opiniones||[]).map(o=>({n:o.nombre,e:o.tipo_evento,t:o.texto,s:o.estrellas}));pintaOps();$('nvp').hidden=!PORTAL;pintarPedido();if(PORTAL)pdRestaurar();
+fetch('/api/publico').then(r=>r.ok?r.json():null).then(d=>{if(!d)return;PORTAL=!!d.portal;$('nvp').hidden=!PORTAL;pintarPedido();if(PORTAL)pdRestaurar();
 const ig=(d.instagram||[]).filter(c=>/^(p|reel|tv)\/[\w-]+$/.test(c));if(ig.length){IG_POSTS=ig;buildCar()}}).catch(()=>{});
 pintarPedido();
 addEventListener('keydown',e=>{if(e.key=='Escape')closeCart()});

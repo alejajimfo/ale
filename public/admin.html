@@ -44,7 +44,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <body>
 <header><div class="bar"><h1>ALENA</h1><span style="color:var(--mu);font-size:14px">Panel del equipo</span><a class="btn o s" href="/">Ver sitio</a><button class="btn o s" onclick="salir()">Cerrar sesión</button></div></header>
 <div class="wrap">
-<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-o" onclick="tab('o')">Opiniones<span id="o_n"></span></button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
+<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-c" onclick="tab('c')">Códigos <b id="nc"></b></button><button id="tb-o" onclick="tab('o')">Opiniones</button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
 
 <!-- LISTA -->
 <div id="v-list">
@@ -60,16 +60,16 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <div class="g2">
 <div><label>Nombre del cliente *</label><input id="e_nombre" maxlength="120"></div>
 <div><label>Cédula</label><input id="e_cedula" inputmode="numeric" placeholder="Solo números"></div>
-<div><label>Celular</label><input id="e_tel" inputmode="numeric" placeholder="3001234567"></div>
-<div><label>Modalidad</label><select id="e_mod" onchange="E.modalidad=this.value;pintaPasos();recVis()"><option value="alquiler">Alquiler simple</option><option value="decoracion">Decoración con montaje</option></select></div>
+<div><label>Celular (aquí le llega el código por WhatsApp)</label><input id="e_tel" inputmode="numeric" placeholder="3001234567"></div>
+<div><label>Modalidad</label><select id="e_mod" onchange="E.modalidad=this.value;pintaPasos();$('e_recw').hidden=E.modalidad!='alquiler'"><option value="alquiler">Alquiler simple</option><option value="decoracion">Decoración con montaje</option></select></div>
 <div><label>Tipo de evento</label><input id="e_tipo" maxlength="120" placeholder="Bautizo, quince años…"></div>
 <div><label>Fecha del evento</label><input id="e_fecha" type="date"></div>
 </div>
 <label>Lugar</label><input id="e_lugar" maxlength="200">
-<div id="e_rec_w"><label>Recogida programada <span class="hint">(solo alquiler · el cliente la verá en su línea de tiempo)</span></label><input id="e_rec" maxlength="500" placeholder="Ej: Jueves 28 de nov., 10:00 a. m. — pasamos por las piezas"></div>
 
 <label>Estado del pedido (toca el paso actual)</label><div class="steps" id="e_pasos"></div>
 
+<div id="e_recw"><label>Recogida programada <span class="hint">(solo alquiler · aparece en la línea de tiempo del cliente)</span></label><input id="e_rec" maxlength="300" placeholder="Ej: Lunes 15 de diciembre, entre 9:00 am y 12:00 m"></div>
 <label>Mensaje para el cliente <span class="hint">(lo verá en su página)</span></label><textarea id="e_msg" rows="2" maxlength="1500" placeholder="Ej: Tu cotización ya está lista. Recuerda confirmar la reserva con el abono."></textarea>
 <label>Piezas y servicios del pedido</label>
 <div class="box" style="background:#fff;padding:14px">
@@ -89,8 +89,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 </div>
 <label>Notas internas <span class="hint">(el cliente NO las ve)</span></label><textarea id="e_int" rows="2" maxlength="4000"></textarea>
 
-<label class="sw"><input type="checkbox" id="e_vis"><span>Habilitar para el cliente<small>Si está activo, el cliente puede ver este pedido con su cédula o celular y su PIN.</small></span></label>
-<div id="e_pin" class="sw" style="cursor:default;flex-wrap:wrap" hidden><span>PIN del cliente<small>Se lo envías una sola vez por WhatsApp. Con su cédula o celular y este PIN entra a ver su pedido.</small></span><b id="e_pinv" style="font:600 26px Outfit;letter-spacing:.2em;color:var(--accd)"></b><button type="button" class="btn o s" onclick="copiaPin()">Copiar</button><button type="button" class="btn o s" onclick="nuevoPin()">Generar nuevo</button></div>
+<label class="sw"><input type="checkbox" id="e_vis"><span>Habilitar para el cliente<small>Si está activo, el cliente puede ver este pedido: ingresa su cédula o celular y le llega un código de 4 números por WhatsApp.</small></span></label>
 
 <div id="e_docs" hidden>
 <h3 style="font-size:24px;margin-top:26px">Documentos</h3>
@@ -109,8 +108,18 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <button class="btn r" id="e_del" onclick="borrar()" hidden>Eliminar</button></div>
 </div></div>
 
+<!-- CÓDIGOS -->
+<div id="v-cod" hidden>
+<div class="box"><h3 style="font-size:26px">Códigos por enviar</h3>
+<p class="hint" id="c_info"></p><div id="c_lista"></div></div></div>
+
+<!-- OPINIONES -->
+<div id="v-op" hidden>
+<p class="hint" style="margin:0 0 12px">Las opiniones que dejan los clientes (alquileres) quedan pendientes. Solo las que apruebes aparecen en la sección pública «Opiniones».</p>
+<div id="op-lista"></div>
+</div>
+
 <!-- AJUSTES -->
-<div id="v-op" hidden><p class="hint">Solo las opiniones aprobadas aparecen en la sección pública «Opiniones». Los clientes las envían desde «Mi pedido» cuando su evento ya ocurrió.</p><div id="op_list"></div></div>
 <div id="v-aj" hidden>
 <div class="box"><h3 style="font-size:26px">Consulta de pedidos para clientes</h3>
 <label class="sw"><input type="checkbox" id="a_portal" onchange="guardaAjustes('portal')"><span>Habilitar «Mi pedido» en el sitio<small>Muestra el menú «Mi pedido» y permite que los clientes ingresen con su cédula o celular. Apagado = nadie puede consultar nada.</small></span></label>
@@ -138,11 +147,20 @@ async function A(accion,extra={}){
   let d={};try{d=await r.json()}catch(e){}
   if(r.status==401){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.replace('/#pedido');throw new Error('Sesión vencida.')}
   if(!r.ok)throw new Error(d.error||'No se pudo completar la acción.');return d}
+async function X(accion,extra={}){let r;try{r=await fetch('/api/extras',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({accion,...extra})})}catch(e){throw new Error('Sin conexión con el servidor.')}
+let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.error||'No se pudo completar la acción.');return d}
+let OPS=[];
+async function cargaOps(){try{OPS=(await X('opiniones_listar')).opiniones;pintaOps()}catch(e){toast(e.message,1)}}
+function pintaOps(){$('op-lista').innerHTML=OPS.length?OPS.map(o=>`<div class="box" style="margin-bottom:12px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b style="color:#d4af37;font-size:20px">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</b><span class="tag ${o.aprobada?'on':''}">${o.aprobada?'Publicada':'Pendiente'}</span><small style="color:var(--mu);margin-left:auto">${esc(o.fecha)}</small></div>
+<p style="margin:8px 0;font-style:italic">“${esc(o.texto)}”</p><small style="color:var(--mu)">Se mostrará como: <b>${esc(o.nombre)}</b>${o.evento?' · '+esc(o.evento):''} — pedido de ${esc(o.cliente)}</small>
+<div class="acts" style="margin-top:12px"><button class="btn s" onclick="opEstado(${o.id},${!o.aprobada})">${o.aprobada?'Quitar de la web':'Aprobar y publicar'}</button><button class="btn r s" onclick="opBorra(${o.id})">Eliminar</button></div></div>`).join(''):'<div class="box" style="text-align:center;color:var(--mu)">Aún no hay opiniones de clientes.</div>'}
+async function opEstado(id,a){try{await X('opinion_estado',{id,aprobada:a});toast(a?'Opinión publicada ✓':'Opinión retirada');await cargaOps()}catch(e){toast(e.message,1)}}
+async function opBorra(id){if(!confirm('¿Eliminar esta opinión?'))return;try{await X('opinion_eliminar',{id});await cargaOps()}catch(e){toast(e.message,1)}}
 function toast(m,bad){const t=$('toast');t.textContent=m;t.className='on'+(bad?' bad':'');clearTimeout(toast._t);toast._t=setTimeout(()=>t.className='',3200)}
 function salir(){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.href='/'}
-function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o'}
+function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-c').className=t=='c'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-cod').hidden=t!='c';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o';if(t=='c')retos();if(t=='o')cargaOps()}
 
-async function cargar(){try{D=await A('listar');lista();ajustes();opis()}catch(e){toast(e.message,1)}}
+async function cargar(){try{const rc=D.recogidas;D=await A('listar');try{D.recogidas=(await X('recogidas')).recogidas}catch(e){D.recogidas=rc||{}}lista();ajustes()}catch(e){toast(e.message,1)}}
 function lista(){const q=$('busca').value.trim().toLowerCase(),qd=q.replace(/\D/g,'');
 const L=D.pedidos.filter(p=>!q||[p.nombre,p.tipo_evento,p.ref].some(x=>String(x||'').toLowerCase().includes(q))||(qd&&[p.cedula,p.telefono].some(x=>(x||'').includes(qd))));
 $('lista').innerHTML=L.length?L.map(p=>{const pasos=D.pasos[p.modalidad]||[];return`<div class="row" onclick="editar(${p.id})"><div class="m"><b>${esc(p.nombre)}</b><small>${esc(p.ref)} · ${esc(p.tipo_evento||'Sin tipo')}${p.fecha_evento?' · '+esc(p.fecha_evento.split('-').reverse().join('/')):''}</small><small>${esc([p.cedula&&'CC '+p.cedula,p.telefono&&'Cel '+p.telefono].filter(Boolean).join(' · '))}</small></div>
@@ -152,11 +170,11 @@ function nuevo(){abrir({id:null,nombre:'',cedula:'',telefono:'',modalidad:'alqui
 function editar(id){abrir(JSON.parse(JSON.stringify(D.pedidos.find(p=>p.id==id))))}
 function abrir(p){E=p;$('v-list').hidden=true;$('v-edit').hidden=false;$('v-aj').hidden=true;
 $('e-tit').textContent=p.id?`${p.ref} · ${p.nombre}`:'Nuevo pedido';
-$('e_nombre').value=p.nombre||'';$('e_cedula').value=p.cedula||'';$('e_tel').value=p.telefono||'';$('e_mod').value=p.modalidad;$('e_rec').value=p.recogida||'';recVis();$('e_tipo').value=p.tipo_evento||'';
+$('e_nombre').value=p.nombre||'';$('e_cedula').value=p.cedula||'';$('e_tel').value=p.telefono||'';$('e_mod').value=p.modalidad;$('e_tipo').value=p.tipo_evento||'';
 $('e_fecha').value=p.fecha_evento||'';$('e_lugar').value=p.lugar||'';$('e_msg').value=p.mensaje||'';$('e_det').value=p.detalle||'';
 $('e_total').value=p.total||'';$('e_abono').value=p.abonado||'';$('e_dep').value=p.deposito||'';$('e_int').value=p.notas_internas||'';$('e_vis').checked=!!p.visible;
-$('e_pin').hidden=!p.id;$('e_pinv').textContent=p.pin||'';$('e_docs').hidden=!p.id;$('e_nodocs').hidden=!!p.id;$('e_del').hidden=!p.id;$('e_wa').hidden=!p.id;
-E.items=Array.isArray(p.items)?p.items:[];$('k_q').value='';CATSEL=0;pintaCat();items(false);pintaPasos();pintaDocs();window.scrollTo(0,0)}
+$('e_docs').hidden=!p.id;$('e_nodocs').hidden=!!p.id;$('e_del').hidden=!p.id;$('e_wa').hidden=!p.id;
+$('e_rec').value=(D.recogidas&&p.id&&D.recogidas[p.id])||'';$('e_recw').hidden=p.modalidad!='alquiler';E.items=Array.isArray(p.items)?p.items:[];$('k_q').value='';CATSEL=0;pintaCat();items(false);pintaPasos();pintaDocs();window.scrollTo(0,0)}
 const CATS=['Todo','Estructuras','Mobiliario','Postres y torteros','Iluminación','Fondos en tela','Neones','Números gigantes','Alfombras','Personajes'];
 const CATALOGO=[["Bandeja de exhibición",15000,3],["Torteros dorados (c/u)",15000,3],["Torteros dorados (set x3)",30000,3],["Soporte de postres encaje",15000,3],["Soporte de postres carruaje",20000,3],["Torteros de cristal (c/u)",20000,3],["Torteros de cristal (set x3)",50000,3],["12 velas LED",25000,4],["Portavelas x3",20000,4],["Flor nube",10000,4],["Tela niño o niña",15000,5],["Tela rosa",15000,5],["Tela azul",15000,5],["Tela blanca",15000,5],["Neón “Mis Quince Años”",50000,6],["Neón “Mi Bautizo”",50000,6],["Neón “Feliz Cumpleaños”",50000,6],["Neón “Congrats Grad”",50000,6],["Alfombra café/beige",40000,8],["Alfombra gris claro",40000,8],["Arco ovalado (c/u)",20000,1],["Arcos ovalados (las tres)",50000,1],["Estructura circular",50000,1],["Estructura corazón",50000,1],["Estructura cuadrada",50000,1],["Mesa redonda (c/u)",20000,1],["Mesas redondas (las tres)",50000,1],["Silla trono",150000,2],["Neón “Siempre fuiste tú”",50000,6],["Neón “Mejor juntos”",50000,6],["Neón “Feliz cumpleaños” (inglés)",50000,6],["Neón “Juntos para siempre”",50000,6],["Neón “Oh bebé”",50000,6],["Neón “¿Quieres casarte conmigo?”",50000,6],["Número gigante 0",50000,7],["Número gigante 1",50000,7],["Número gigante 2",50000,7],["Número gigante 3",50000,7],["Número gigante 4",50000,7],["Número gigante 5",50000,7],["Número gigante 6",50000,7],["Número gigante 7",50000,7],["Número gigante 8",50000,7],["Número gigante 9",50000,7],["Woody",50000,9],["Tiro al Blanco",50000,9],["Jessie",50000,9],["Guerreras KPop",50000,9],["Winnie Poh",50000,9],["Igor",50000,9],["Buzz",50000,9],["Stitch",50000,9],["Sailor Moon",50000,9],["Mickey Mouse",65000,9],["Bluey Heeler",50000,9],["Bingo Heeler",50000,9],["Jefe en pañales",50000,9],["Goku bebé",50000,9],["Niña graduada",50000,9],["Snoopy",50000,9],["Jirafa",50000,9],["León",65000,9],["Oveja",50000,9],["Ángel",50000,9],["Vaquita",50000,9],["Cebra",50000,9],["Conejo",50000,9],["Bebé burro Shrek",50000,9],["Elefante",50000,9],["Bebés Shrek",50000,9],["Hada luna",50000,9],["Hada hoja",50000,9],["Conejo mariposa",50000,9],["Conejo bailarina",50000,9]];
 let CATSEL=0;
@@ -180,17 +198,14 @@ function pintaDocs(){const C={cotizacion:'Cotización',conformidad:'Conformidad'
 $('e_doclist').innerHTML=(E.docs||[]).length?E.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${C[d.categoria]||'Otro'} · ${Math.max(1,Math.round(d.tam/1024))} KB · ${d.publico?'visible al cliente':'solo equipo'}</small></span>
 <button class="btn o s" onclick="bajar(${d.id},'${esc(d.nombre).replace(/'/g,'')}')">Abrir</button><button class="btn o s" onclick="visDoc(${d.id},${!d.publico})">${d.publico?'Ocultar':'Mostrar'}</button><button class="btn r s" onclick="borraDoc(${d.id})">Quitar</button></div>`).join(''):'<p class="hint">Sin documentos todavía.</p>'}
 
-function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,recogida:$('e_rec').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,items:E.items,total:n('e_total'),abonado:n('e_abono'),deposito:n('e_dep'),notas_internas:$('e_int').value,visible:$('e_vis').checked}}
+function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,items:E.items,total:n('e_total'),abonado:n('e_abono'),deposito:n('e_dep'),notas_internas:$('e_int').value,visible:$('e_vis').checked}}
 async function guardar(){const b=$('e_save');b.disabled=true;
-try{const r=await A('guardar',{pedido:leer()});toast('Pedido guardado ✓');await cargar();
+try{const f=leer(),r=await A('guardar',{pedido:f});try{await X('recogida_guardar',{id:r.id,texto:f.modalidad=='alquiler'?$('e_rec').value:''})}catch(e){toast('Pedido guardado, pero no se pudo guardar la recogida.',1)}toast('Pedido guardado ✓');await cargar();
 const p=D.pedidos.find(x=>x.id==r.id);if(p)abrir(JSON.parse(JSON.stringify(p)))}catch(e){toast(e.message,1)}finally{b.disabled=false}}
 async function borrar(){if(!confirm(`¿Eliminar el pedido ${E.ref} y todos sus documentos? No se puede deshacer.`))return;
 try{await A('eliminar',{id:E.id});toast('Pedido eliminado');await cargar();volver()}catch(e){toast(e.message,1)}}
-function copiaPin(){navigator.clipboard.writeText(E.pin||'').then(()=>toast('PIN copiado'),()=>toast('No se pudo copiar',1))}
-async function nuevoPin(){if(!confirm('¿Generar un PIN nuevo? El anterior dejará de funcionar y tendrás que enviárselo al cliente otra vez.'))return;
-try{const r=await A('nuevo_pin',{id:E.id});E.pin=r.pin;$('e_pinv').textContent=r.pin;const p=D.pedidos.find(x=>x.id==E.id);if(p)p.pin=r.pin;toast('PIN nuevo generado ✓')}catch(e){toast(e.message,1)}}
 function avisar(){const url=location.origin+'/#pedido',tel=($('e_tel').value||'').replace(/\D/g,'');
-const m=`Hola ${$('e_nombre').value.split(' ')[0]} 👋 Ya puedes consultar el estado de tu pedido, tu cotización y tus documentos en:\n${url}\n\nToca «Ingresar con código», escribe tu cédula o celular y tu PIN personal: *${E.pin}*\n\nEs solo para ti, no lo compartas. ¡Gracias por confiar en ALENA!`;
+const m=`Hola ${$('e_nombre').value.split(' ')[0]} 👋 Ya puedes consultar el estado de tu pedido, tu cotización y tus documentos en:\n${url}\n\nToca «Ingresar con código», escribe tu cédula o tu celular y te enviaremos un código de 4 números por WhatsApp. ¡Gracias por confiar en ALENA!`;
 if(!$('e_vis').checked)toast('Recuerda activar «Habilitar para el cliente» y guardar.',1);
 if(tel.length==10)window.open(`https://api.whatsapp.com/send/?phone=57${tel}&text=${encodeURIComponent(m)}`,'_blank');
 else navigator.clipboard.writeText(m).then(()=>toast('Mensaje copiado'),()=>toast('No se pudo copiar',1))}
@@ -216,17 +231,17 @@ async function bajar(id,nombre){try{const r=await fetch('/api/documento?id='+id,
 const a=document.createElement('a');a.href=u;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}catch(e){toast('No se pudo abrir el documento.',1)}}
 
 /* ---- ajustes ---- */
-function recVis(){$('e_rec_w').hidden=$('e_mod').value!='alquiler'}
-function opis(){const L=D.opiniones||[],pend=L.filter(o=>o.estado=='pendiente').length;$('o_n').textContent=pend?` (${pend})`:'';
-const ET={pendiente:'Pendiente de aprobar',aprobada:'Publicada',rechazada:'Oculta'};
-$('op_list').innerHTML=L.length?L.map(o=>`<div class="box" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>${esc(o.nombre)}</b><span style="color:#d4af37;letter-spacing:.1em">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</span></div><p style="margin:8px 0">${esc(o.texto)}</p><p class="hint">${esc(o.creado)} · Pedido ${o.pedido_id?'AL-'+String(o.pedido_id).padStart(4,'0'):'—'} · <b>${ET[o.estado]||o.estado}</b></p><div class="acts">${o.estado!='aprobada'?`<button class="btn s" onclick="opEstado(${o.id},'aprobada')">Aprobar y publicar</button>`:`<button class="btn o" onclick="opEstado(${o.id},'rechazada')">Ocultar</button>`}${o.estado=='pendiente'?`<button class="btn o" onclick="opEstado(${o.id},'rechazada')">Rechazar</button>`:''}<button class="btn r" onclick="opBorrar(${o.id})">Eliminar</button></div></div>`).join(''):'<p class="hint">Aún no hay opiniones de clientes.</p>'}
-async function opEstado(id,estado){try{await A('opinion_estado',{id,estado});await cargar();toast(estado=='aprobada'?'Opinión publicada ✓':'Opinión oculta')}catch(e){toast(e.message,1)}}
-async function opBorrar(id){if(!confirm('¿Eliminar esta opinión?'))return;try{await A('opinion_eliminar',{id});await cargar();toast('Opinión eliminada')}catch(e){toast(e.message,1)}}
 function ajustes(){$('a_portal').checked=!!D.ajustes.portal;$('a_ig').value=(D.ajustes.instagram||[]).map(c=>`https://www.instagram.com/${c}/`).join('\n');$('a_link').textContent=location.origin+'/#pedido'}
 async function guardaAjustes(que){try{const d=que=='portal'?{portal:$('a_portal').checked}:{instagram:$('a_ig').value.split(/\s+/).filter(Boolean)};
 const r=await A('ajustes',d);D.ajustes=r.ajustes;ajustes();toast(que=='portal'?(D.ajustes.portal?'Consulta de pedidos habilitada ✓':'Consulta de pedidos deshabilitada'):'Carrusel guardado ✓')}catch(e){toast(e.message,1);ajustes()}}
 
-if(TOKEN)cargar();
+async function retos(){try{const r=await A('retos');$('nc').textContent=r.retos.length?'('+r.retos.length+')':'';
+$('c_info').textContent=r.auto?'La API de WhatsApp está activa: los códigos se envían solos. Aquí solo aparecen los que no se pudieron enviar.':'Cuando un cliente pide su código, aparece aquí. Toca «Enviar por WhatsApp» y se abre el chat con el mensaje listo (el código sirve 1 hora).';
+$('c_lista').innerHTML=r.retos.length?r.retos.map(x=>`<div class="dc"><span><b>${esc(x.nombre||'Cliente')}</b><small>Cel ${esc(x.telefono)} · pidió a las ${esc(x.hora)}</small></span><b style="font:600 24px Outfit;letter-spacing:.15em;color:var(--accd)">${esc(x.codigo)}</b><button class="btn s" onclick="envReto(${x.id},'${esc(x.telefono)}','${esc(x.codigo)}')">Enviar por WhatsApp</button><button class="btn o s" onclick="marcaReto(${x.id})">Ya lo envié</button></div>`).join(''):'<p class="hint">No hay códigos pendientes.</p>'}catch(e){}}
+async function envReto(id,tel,cod){window.open(`https://api.whatsapp.com/send/?phone=57${tel}&text=${encodeURIComponent('Tu código de acceso a ALENA es *'+cod+'*. Sirve por 1 hora. No lo compartas.')}`,'_blank');await marcaReto(id)}
+async function marcaReto(id){try{await A('reto_enviado',{id});retos()}catch(e){toast(e.message,1)}}
+setInterval(()=>{if(!document.hidden&&TOKEN)retos()},20000);
+if(TOKEN){cargar();retos()}
 </script>
 </body>
 </html>
