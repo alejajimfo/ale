@@ -108,8 +108,9 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 
 .addbar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140px);z-index:35;background:var(--tx);color:#fff;border-radius:30px;padding:8px 8px 8px 20px;display:flex;gap:14px;align-items:center;font-size:14px;transition:.3s;max-width:calc(100% - 100px);box-shadow:0 8px 24px rgba(0,0,0,.25)}.addbar.on{transform:translate(-50%,0)}.addbar button{background:var(--acc);color:#fff;border:0;border-radius:24px;padding:8px 16px;font:500 13px Outfit;cursor:pointer;white-space:nowrap}
 .linkb{background:none;border:0;color:var(--accd);text-decoration:underline;font:400 13px Outfit;cursor:pointer;margin-top:12px}
+.rec{background:#fff3e6;border:1px dashed var(--acc,#c9744f);border-radius:14px;padding:12px 14px;margin:10px 0;font-size:15px}.rec b{display:block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.opf{background:#fff;border:1px solid #efd3c4;border-radius:14px;padding:14px;margin-top:6px}.stars{display:flex;gap:4px;margin:6px 0}.stars button{background:none;border:0;font-size:32px;line-height:1;color:#d9c3b5;cursor:pointer;padding:0 2px}.stars button.on{color:#d4af37}.opf textarea{width:100%;border:1px solid #e3c4b3;border-radius:10px;padding:10px;font:inherit}.opf .er{color:#b3261e;font-size:14px;min-height:18px}
 .its{padding-left:24px;margin-top:6px;font-size:15px}.its li{padding:7px 0;border-bottom:1px solid #efd3c4}.its li:last-child{border:0}.its li b{float:right;font-weight:500;margin-left:12px}
-.tp.x>i{border-style:dashed;color:var(--accd)}.stars{display:flex;gap:4px;margin:6px 0}.stars button{background:none;border:0;font-size:30px;line-height:1;color:#d4af37;cursor:pointer;padding:0 2px}.opf textarea{width:100%;padding:10px 12px;border:1px solid #e3c4b3;border-radius:12px;font:400 15px Outfit;background:#fff;color:var(--tx);margin:6px 0}.opf small{display:block;color:var(--mu);margin-top:8px}.opf .err{color:#b3402f;font-size:13px;min-height:18px}
 </style>
 </head>
 <body>
@@ -370,9 +371,9 @@ m+=`\nAcepto los términos y condiciones de la página. Quedo atento(a) a la cot
 window.open(`https://api.whatsapp.com/send/?phone=${WA}&text=${encodeURIComponent(m)}&type=phone_number&app_absent=0`,'_blank')}
 function tab(n){for(let i=1;i<3;i++){document.getElementById('p'+i).style.display=i==n?'block':'none';document.getElementById('t'+i).className='btn'+(i==n?'':' o')}}
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-let OPS_API=[];
-function pintaOps(){const L=[...OPS_API,...OPINIONES];document.getElementById('ops').innerHTML=L.map(o=>{const s=Math.max(1,Math.min(5,o.s||5));return`<div class="op-card"><div class="st" style="color:#d4af37;letter-spacing:.1em" aria-label="${s} estrellas">${'★'.repeat(s)}${'☆'.repeat(5-s)}</div><p>“${esc(o.t)}”</p><strong>${esc(o.n)}</strong>${o.e?`<br><em>${esc(o.e)}</em>`:''}</div>`}).join('')}
-pintaOps();
+function renderOps(extra){const L=(extra||[]).filter(o=>o&&o.t&&o.n).map(o=>({n:o.n,t:o.t,e:o.e,s:Math.min(5,Math.max(1,parseInt(o.s,10)||5))})).concat(OPINIONES);
+document.getElementById('ops').innerHTML=L.map(o=>`<div class="op-card"><div class="st" style="color:#d4af37;letter-spacing:.1em" aria-label="${o.s||5} estrellas">${'★'.repeat(o.s||5)}${'☆'.repeat(5-(o.s||5))}</div><p>“${esc(o.t)}”</p><strong>${esc(o.n)}</strong>${o.e?`<br><em>${esc(o.e)}</em>`:''}</div>`).join('')}
+renderOps();
 // Las publicaciones se administran desde el panel (admin.html > Ajustes). Si no hay ninguna, se muestran fotos del catálogo.
 let IG_POSTS=[];
 const IG_FALLBACK=['neon-quince','silla-trono','torteros-cristal','arco-ovalado','num-5','neon-casarte','tela-nino','velas-led'];
@@ -421,7 +422,19 @@ async function pdRestaurar(){let g;try{g=JSON.parse(localStorage.getItem('alena_
 if(!g||!g.t||g.exp<Date.now()){try{localStorage.removeItem('alena_sesion')}catch(x){}return}
 try{const d=await api('/api/consulta',{headers:{Authorization:'Bearer '+g.t}});TOK=g.t;PD=d.pedidos;pdVer()}catch(x){try{localStorage.removeItem('alena_sesion')}catch(y){}}}
 function linea(p){const fin=p.paso>=p.pasos.length-1;return'<div class="tl">'+p.pasos.map((n,i)=>{const c=fin||i<p.paso?'d':i==p.paso?'c':'';
-return`<div class="tp ${c}"><i>${c=='d'?'✓':i+1}</i><div>${esc(n)}${p.fechas[i]&&i<=p.paso?`<small>${fmtI(p.fechas[i])}</small>`:''}</div></div>`+(i==5&&p.modalidad=='alquiler'&&p.recogida?`<div class="tp x ${fin||p.paso>5?'d':''}"><i>🚚</i><div>Recogida programada</div></div>`:'')}).join('')+'</div>'+(p.modalidad=='alquiler'&&p.recogida?`<div class="msg">🚚 <b>Recogida programada:</b> ${esc(p.recogida)}</div>`:'')}
+return`<div class="tp ${c}"><i>${c=='d'?'✓':i+1}</i><div>${esc(n)}${p.fechas[i]&&i<=p.paso?`<small>${fmtI(p.fechas[i])}</small>`:''}${n=='Recogida programada'&&p.recogida?`<small>${esc(p.recogida)}</small>`:''}</div></div>`}).join('')+'</div>'}
+const OPST={};
+function opForm(p){if(!p.puede_opinar)return'';const o=p.opinion;
+if(o&&o.estado=='aprobada')return`<h4>Tu opinión</h4><div class="opf"><div style="color:#d4af37">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</div><p>${esc(o.texto)}</p><small>Publicada en el sitio. ¡Gracias por tu confianza!</small></div>`;
+const n=OPST[p.id]??(o?o.estrellas:0);
+return`<h4>${o?'Tu opinión (pendiente de revisión)':'¿Cómo te fue con ALENA?'}</h4><div class="opf"><div class="stars" role="radiogroup" aria-label="Calificación">${[1,2,3,4,5].map(i=>`<button type="button" class="${i<=n?'on':''}" aria-label="${i} estrellas" onclick="pdStar(${p.id},${i})">★</button>`).join('')}</div>
+<textarea id="op_t${p.id}" rows="3" maxlength="600" placeholder="Cuéntanos tu experiencia…">${esc(o?o.texto:'')}</textarea>
+<div class="er" id="op_e${p.id}"></div><button class="btn" onclick="pdOpinar(${p.id})">${o?'Actualizar opinión':'Enviar opinión'}</button>
+<small style="display:block;margin-top:8px">${o?'Ya la recibimos; la publicaremos en el sitio cuando la revisemos.':'La revisamos antes de publicarla en el sitio (se muestra tu nombre y la inicial de tu apellido).'}</small></div>`}
+function pdStar(id,n){const t=($('op_t'+id)||{}).value;OPST[id]=n;pdVer();const e=$('op_t'+id);if(e)e.value=t||''}
+async function pdOpinar(id){const e=$('op_e'+id),n=OPST[id]??((PD.find(p=>p.id==id)||{}).opinion||{}).estrellas;e.textContent='';
+try{const d=await api('/api/opinion',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+TOK},body:JSON.stringify({pedido_id:id,estrellas:n,texto:$('op_t'+id).value})});
+PD.find(p=>p.id==id).opinion=d.opinion;delete OPST[id];pdVer()}catch(x){e.textContent=x.message}}
 function pdVer(){$('pd-code').hidden=true;$('pd-admin').hidden=true;$('pd-ch').hidden=true;
 const r=$('pd-res');r.hidden=false;
 r.innerHTML=PD.map(p=>{const saldo=Math.max(0,p.total-p.abonado);
@@ -430,6 +443,7 @@ return`<article class="pdc"><div class="meta">Pedido ${esc(p.ref)} · ${p.modali
 <div class="meta">${[p.fecha_evento?fmtF(p.fecha_evento):'',p.lugar].filter(Boolean).map(esc).join(' · ')}</div>
 <span class="est">${esc(p.pasos[Math.min(p.paso,p.pasos.length-1)])}</span>
 ${linea(p)}
+${p.recogida?`<div class="rec"><b>Recogida programada</b>${esc(p.recogida)}</div>`:''}
 ${p.mensaje?`<div class="msg">${esc(p.mensaje)}</div>`:''}
 ${p.total?`<h4>Cotización</h4><div class="eco"><div><small>Total</small><b>${cop(p.total)}</b></div><div><small>Abonado</small><b>${cop(p.abonado)}</b></div><div><small>Saldo</small><b>${cop(saldo)}</b></div>${p.deposito?`<div><small>Depósito de garantía</small><b>${cop(p.deposito)}</b></div>`:''}</div>`:''}
 ${p.items&&p.items.length?`<h4>Piezas y servicios</h4><ol class="its">`+p.items.map(it=>`<li><b>${cop(it.c*it.p)}</b>${it.c} × ${esc(it.n)}</li>`).join('')+'</ol>':''}
@@ -437,14 +451,6 @@ ${p.detalle?`<h4>Más detalles</h4><div class="det">${esc(p.detalle)}</div>`:''}
 ${p.docs.length?`<h4>Documentos</h4>`+p.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${CAT_DOC[d.categoria]||'Documento'} · ${Math.max(1,Math.round(d.tam/1024))} KB</small></span><button class="btn o" onclick="pdDoc(${d.id})">Descargar</button></div>`).join(''):''}
 ${opForm(p)}
 </article>`}).join('')+'<p class="res"><button class="btn o" onclick="pdSalir()">Salir</button></p>'}
-const OPSEL={};
-function opForm(p){if(p.paso<5)return'';const o=p.opinion;
-if(o)return`<h4>Tu opinión</h4><div class="msg"><span style="color:#d4af37">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</span><br>${o.estado=='aprobada'?'Ya está publicada en nuestra página. ¡Gracias!':o.estado=='rechazada'?'Gracias por escribirnos.':'Gracias. La revisaremos y, si todo está bien, la publicaremos.'}</div>`;
-return`<h4>¿Cómo te fue con ALENA?</h4><div class="opf"><div class="stars" id="st${p.id}">${[1,2,3,4,5].map(n=>`<button type="button" aria-label="${n} estrellas" onclick="pdStar(${p.id},${n})">☆</button>`).join('')}</div><textarea id="ot${p.id}" rows="3" maxlength="600" placeholder="Cuéntanos tu experiencia…"></textarea><div class="err" id="oe${p.id}"></div><button class="btn" onclick="pdOp(${p.id})">Enviar opinión</button><small>Solo se publica si el equipo la aprueba, con tu nombre y la inicial de tu apellido.</small></div>`}
-function pdStar(id,n){OPSEL[id]=n;[...$('st'+id).children].forEach((b,i)=>{b.textContent=i<n?'★':'☆'})}
-async function pdOp(id){const e=$('oe'+id),n=OPSEL[id]||0,t=$('ot'+id).value.trim();e.textContent='';
-if(!n){e.textContent='Elige de 1 a 5 estrellas.';return}if(t.length<10){e.textContent='Cuéntanos un poco más (mínimo 10 letras).';return}
-try{await api('/api/opinion',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({pedido_id:id,estrellas:n,texto:t})});PD.find(x=>x.id==id).opinion={estrellas:n,texto:t,estado:'pendiente'};pdVer()}catch(x){e.textContent=x.message}}
 async function pdDoc(id){const d=PD.flatMap(p=>p.docs).find(x=>x.id==id);
 try{const r=await fetch('/api/documento?id='+id,{headers:{Authorization:'Bearer '+TOK}});if(!r.ok)throw 0;const u=URL.createObjectURL(await r.blob());
 const a=document.createElement('a');a.href=u;a.download=d?d.nombre:'documento';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
@@ -452,7 +458,7 @@ catch(e){alert('No pudimos descargar el documento. Vuelve a ingresar e intenta d
 async function pdAdmin(ev){ev.preventDefault();const e=$('pa_err'),b=$('pa_go');e.textContent='';b.disabled=true;b.textContent='Entrando…';
 try{const d=await api('/api/admin-login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:$('pa_e').value,clave:$('pa_c').value})});
 try{sessionStorage.setItem('alena_admin',d.token)}catch(x){}location.href='/admin.html'}catch(x){e.textContent=x.message;b.disabled=false;b.textContent='Entrar'}return false}
-fetch('/api/publico').then(r=>r.ok?r.json():null).then(d=>{if(!d)return;PORTAL=!!d.portal;OPS_API=(d.opiniones||[]).map(o=>({n:o.nombre,e:o.tipo_evento,t:o.texto,s:o.estrellas}));pintaOps();$('nvp').hidden=!PORTAL;pintarPedido();if(PORTAL)pdRestaurar();
+fetch('/api/publico').then(r=>r.ok?r.json():null).then(d=>{if(!d)return;PORTAL=!!d.portal;$('nvp').hidden=!PORTAL;if(d.opiniones&&d.opiniones.length)renderOps(d.opiniones);pintarPedido();if(PORTAL)pdRestaurar();
 const ig=(d.instagram||[]).filter(c=>/^(p|reel|tv)\/[\w-]+$/.test(c));if(ig.length){IG_POSTS=ig;buildCar()}}).catch(()=>{});
 pintarPedido();
 addEventListener('keydown',e=>{if(e.key=='Escape')closeCart()});

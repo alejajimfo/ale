@@ -5,8 +5,7 @@ export default async () => {
   try {
     await ensureSchema();
     const a = await getAjustes();
-    const opiniones = await q(`SELECT o.nombre, o.estrellas, o.texto, p.tipo_evento FROM opiniones o LEFT JOIN pedidos p ON p.id = o.pedido_id
-                               WHERE o.estado = 'aprobada' ORDER BY o.creado DESC LIMIT 50`);
+    const opiniones = (await q(`SELECT autor AS n, tipo_evento AS e, texto AS t, estrellas AS s FROM opiniones WHERE estado = 'aprobada' ORDER BY id DESC LIMIT 30`));
     return json({ portal: a.portal, instagram: a.instagram, opiniones }, 200, { 'cache-control': 'public, max-age=30' });
   } catch (e) {
     console.error(e);

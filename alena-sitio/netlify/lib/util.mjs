@@ -7,8 +7,10 @@ export class ConfigError extends Error {}
 /* ---------- Pasos de la línea de tiempo ---------- */
 export const PASOS = {
   decoracion: ['Solicitud recibida', 'Cotización enviada', 'Reserva confirmada', 'Diseño y preparación', 'Montaje', 'Evento', 'Desmontaje', 'Finalizado'],
-  alquiler: ['Solicitud recibida', 'Cotización enviada', 'Reserva confirmada', 'Piezas listas', 'Entrega de piezas', 'Evento', 'Devolución y revisión', 'Finalizado'],
+  alquiler: ['Solicitud recibida', 'Cotización enviada', 'Reserva confirmada', 'Piezas listas', 'Recogida programada', 'Piezas entregadas', 'Evento', 'Devolución y revisión', 'Finalizado'],
 };
+// Desde qué paso el cliente puede dejar su opinión (cuando llega el «Evento»)
+export const pasoEvento = (modalidad) => (PASOS[modalidad] || PASOS.alquiler).indexOf('Evento');
 
 /* ---------- Base de datos ---------- */
 let _sql;
@@ -45,18 +47,8 @@ const SCHEMA = [
     actualizado timestamptz NOT NULL DEFAULT now()
   )`,
   `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS pin text`,
-  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS items jsonb NOT NULL DEFAULT '[]'::jsonb`,
   `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS recogida text`,
-  `CREATE TABLE IF NOT EXISTS opiniones (
-    id serial PRIMARY KEY,
-    pedido_id int REFERENCES pedidos(id) ON DELETE SET NULL,
-    nombre text NOT NULL,
-    estrellas int NOT NULL CHECK (estrellas BETWEEN 1 AND 5),
-    texto text NOT NULL,
-    estado text NOT NULL DEFAULT 'pendiente',
-    creado timestamptz NOT NULL DEFAULT now()
-  )`,
-  `CREATE UNIQUE INDEX IF NOT EXISTS opiniones_pedido_uq ON opiniones (pedido_id) WHERE pedido_id IS NOT NULL`,
+  `ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS items jsonb NOT NULL DEFAULT '[]'::jsonb`,
   `CREATE INDEX IF NOT EXISTS pedidos_cedula_idx ON pedidos (cedula)`,
   `CREATE INDEX IF NOT EXISTS pedidos_telefono_idx ON pedidos (telefono)`,
   `CREATE TABLE IF NOT EXISTS documentos (
@@ -71,6 +63,16 @@ const SCHEMA = [
     creado timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE INDEX IF NOT EXISTS documentos_pedido_idx ON documentos (pedido_id)`,
+  `CREATE TABLE IF NOT EXISTS opiniones (
+    id serial PRIMARY KEY,
+    pedido_id int NOT NULL UNIQUE REFERENCES pedidos(id) ON DELETE CASCADE,
+    autor text NOT NULL,
+    tipo_evento text,
+    estrellas int NOT NULL,
+    texto text NOT NULL,
+    estado text NOT NULL DEFAULT 'pendiente',
+    creado timestamptz NOT NULL DEFAULT now()
+  )`,
   `CREATE TABLE IF NOT EXISTS ajustes (clave text PRIMARY KEY, valor jsonb NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS intentos (
     id bigserial PRIMARY KEY,
@@ -81,10 +83,22 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS intentos_idx ON intentos (ip, clase, en)`,
 ];
 
+// Se agregó «Recogida programada» como paso 5 del alquiler: los pedidos de alquiler que ya estaban
+// en el paso 5 o más avanzado se corren un lugar. Corre una sola vez (la marca se reclama de forma atómica).
+async function migrarPasos() {
+  const r = await q(`INSERT INTO ajustes (clave, valor) VALUES ('mig_recogida', 'true'::jsonb) ON CONFLICT (clave) DO NOTHING RETURNING clave`);
+  if (!r.length) return;
+  for (const f of await q(`SELECT id, paso, historial FROM pedidos WHERE modalidad = 'alquiler'`)) {
+    const h = {};
+    for (const [k, v] of Object.entries(f.historial || {})) h[+k >= 4 ? +k + 1 : +k] = v;
+    await q(`UPDATE pedidos SET paso = $2::int, historial = $3::jsonb WHERE id = $1::int`, [f.id, f.paso >= 4 ? f.paso + 1 : f.paso, JSON.stringify(h)]);
+  }
+}
+
 let _ready;
 export function ensureSchema() {
   if (!_ready) {
-    _ready = (async () => { for (const s of SCHEMA) await q(s); })().catch((e) => { _ready = null; throw e; });
+    _ready = (async () => { for (const s of SCHEMA) await q(s); await migrarPasos(); })().catch((e) => { _ready = null; throw e; });
   }
   return _ready;
 }
@@ -177,12 +191,13 @@ export function pin4() {
 }
 
 /* ---------- Pedido -> objeto JSON ---------- */
-export const COLS_PEDIDO = `id, items, pin, nombre, cedula, telefono, modalidad, tipo_evento,
+export const COLS_PEDIDO = `id, items, pin, recogida, nombre, cedula, telefono, modalidad, tipo_evento,
   to_char(fecha_evento, 'YYYY-MM-DD') AS fecha_evento, lugar, paso, historial, mensaje, detalle,
-  total, abonado, deposito, notas_internas, visible, recogida`;
+  total, abonado, deposito, notas_internas, visible`;
 
 export function paraCliente(p, docs = [], ops = []) {
   const pasos = PASOS[p.modalidad] || PASOS.alquiler;
+  const op = ops.find((o) => o.pedido_id === p.id);
   return {
     id: p.id,
     ref: refDe(p.id),
@@ -197,7 +212,8 @@ export function paraCliente(p, docs = [], ops = []) {
     mensaje: p.mensaje,
     detalle: p.detalle,
     recogida: p.modalidad === 'alquiler' ? p.recogida : null,
-    opinion: (() => { const o = ops.find((x) => x.pedido_id === p.id); return o ? { estrellas: o.estrellas, texto: o.texto, estado: o.estado } : null; })(),
+    puede_opinar: p.paso >= pasoEvento(p.modalidad),
+    opinion: op ? { estrellas: op.estrellas, texto: op.texto, estado: op.estado } : null,
     items: Array.isArray(p.items) ? p.items : [],
     total: p.total,
     abonado: p.abonado,

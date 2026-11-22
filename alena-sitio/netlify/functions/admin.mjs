@@ -31,8 +31,6 @@ async function listar() {
   return {
     pasos: PASOS,
     ajustes: await getAjustes(),
-    opiniones: await q(`SELECT id, pedido_id, nombre, estrellas, texto, estado, to_char(creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS creado
-                        FROM opiniones ORDER BY (estado = 'pendiente') DESC, creado DESC`),
     pedidos: pedidos.map((p) => ({ ...p, ref: refDe(p.id), docs: docs.filter((d) => d.pedido_id === p.id) })),
   };
 }
@@ -48,7 +46,6 @@ async function guardar(b) {
   const modalidad = p.modalidad === 'decoracion' ? 'decoracion' : 'alquiler';
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(p.fecha_evento || '') ? p.fecha_evento : null;
   const paso = Math.max(0, Math.min(PASOS[modalidad].length - 1, parseInt(p.paso, 10) || 0));
-  const recogida = modalidad === 'alquiler' ? texto(p.recogida, 500) : null;
 
   let historial = {};
   let id = parseInt(p.id, 10);
@@ -61,7 +58,8 @@ async function guardar(b) {
 
   const vals = [nombre, cedula, telefono, modalidad, texto(p.tipo_evento, 120), fecha, texto(p.lugar, 200), paso,
     JSON.stringify(historial), texto(p.mensaje, 1500), texto(p.detalle, 4000), entero(p.total), entero(p.abonado),
-    entero(p.deposito), texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items)), recogida];
+    entero(p.deposito), texto(p.notas_internas, 4000), visible, JSON.stringify(limpiarItems(p.items)),
+    modalidad === 'alquiler' ? texto(p.recogida, 500) : null];
 
   if (Number.isInteger(id)) {
     await q(`UPDATE pedidos SET nombre=$1, cedula=$2, telefono=$3, modalidad=$4, tipo_evento=$5, fecha_evento=$6::date,
@@ -112,6 +110,20 @@ export default async (req) => {
         await q(`DELETE FROM pedidos WHERE id = $1`, [id]);
         return json({ ok: true });
       }
+      case 'opiniones': {
+        const rows = await q(`SELECT o.id, o.pedido_id, o.autor, o.tipo_evento, o.estrellas, o.texto, o.estado,
+            to_char(o.creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD') AS fecha
+            FROM opiniones o ORDER BY (o.estado = 'pendiente') DESC, o.id DESC`);
+        return json({ opiniones: rows.map((o) => ({ ...o, ref: refDe(o.pedido_id) })) });
+      }
+      case 'opinion_estado': {
+        if (!['pendiente', 'aprobada', 'rechazada'].includes(b.estado)) return json({ error: 'Estado no válido.' }, 400);
+        await q(`UPDATE opiniones SET estado = $2 WHERE id = $1::int`, [parseInt(b.id, 10), b.estado]);
+        return json({ ok: true });
+      }
+      case 'opinion_borrar':
+        await q(`DELETE FROM opiniones WHERE id = $1::int`, [parseInt(b.id, 10)]);
+        return json({ ok: true });
       case 'nuevo_pin': {
         const id = parseInt(b.id, 10);
         if (!Number.isInteger(id)) return json({ error: 'Pedido no válido.' }, 400);
@@ -125,15 +137,6 @@ export default async (req) => {
           await setAjuste('instagram', lista);
         }
         return json({ ok: true, ajustes: await getAjustes() });
-      }
-      case 'opinion_estado': {
-        if (!['aprobada', 'rechazada', 'pendiente'].includes(b.estado)) return json({ error: 'Estado no válido.' }, 400);
-        await q(`UPDATE opiniones SET estado = $2 WHERE id = $1::int`, [parseInt(b.id, 10), b.estado]);
-        return json({ ok: true });
-      }
-      case 'opinion_eliminar': {
-        await q(`DELETE FROM opiniones WHERE id = $1::int`, [parseInt(b.id, 10)]);
-        return json({ ok: true });
       }
       case 'subir_doc':
         return await subirDoc(b);

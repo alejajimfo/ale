@@ -22,6 +22,9 @@
 4. Toca «Enviar enlace al cliente»: se abre WhatsApp con el enlace y el PIN ya escritos. Se envía una sola vez.
 5. El cliente entra a `tu-sitio/#pedido` → «Ingresar con código» → escribe su cédula o celular y su PIN. El acceso dura 24 horas en ese navegador.
 6. Si el PIN se filtra: «Generar nuevo» en el pedido; el anterior deja de funcionar.
+7. **Alquileres → Recogida programada:** en un pedido de alquiler, escribe en «Recogida programada» el día, la hora y el lugar. El cliente lo ve en su línea de tiempo (paso 5) y en un recuadro destacado. En decoración con montaje no aplica.
+8. **Opiniones con estrellas:** cuando el pedido llega al paso «Evento», el cliente ve en «Mi pedido» un formulario de 1 a 5 estrellas + comentario. Queda *pendiente*; entra al panel → pestaña **Opiniones** (muestra un contador de pendientes) y toca «Aprobar y publicar». Solo las aprobadas salen en la sección pública Opiniones (con nombre + inicial del apellido). También puedes rechazar, quitar del sitio o eliminar.
+9. Si tenías pedidos de alquiler en curso, el sistema corre sus pasos automáticamente una sola vez al desplegar (se agregó un paso nuevo), así que nadie pierde su avance.
 
 ## Seguridad (todo gratis, sin servicios externos)
 - Admin y clave solo viven en variables de entorno; el acceso del admin dura 8 h y el del cliente 24 h.
@@ -29,7 +32,3 @@
 - El PIN tiene solo 4 números, por eso hay bloqueo: 5 intentos fallidos con los mismos datos bloquean 30 minutos, y 10 fallos desde una misma conexión también.
 - Si los datos no coinciden, el mensaje es siempre el mismo (no revela qué clientes existen).
 - Si alguien bloquea a un cliente a propósito, el cliente puede escribirte por WhatsApp o esperar 30 minutos.
-
-## Novedades: recogida programada y opiniones con aprobación
-- **Recogida programada (solo alquiler):** en el pedido, escribe el campo «Recogida programada» (ej: «Jueves 28, 10 a. m.»). El cliente la ve en su línea de tiempo, después de «Evento», y como aviso debajo. Si lo dejas vacío no aparece nada.
-- **Opiniones:** cuando el pedido llega al paso «Evento» (o posterior), el cliente ve en «Mi pedido» un formulario con estrellas y comentario (1 por pedido). Queda **pendiente**; solo sale en la sección pública «Opiniones» cuando la apruebas en el panel → pestaña «Opiniones» (Aprobar, Ocultar, Eliminar). Se publica con su primer nombre y la inicial del apellido. Las tablas nuevas se crean solas al desplegar.
