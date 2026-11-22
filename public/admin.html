@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:,">
+<title>ALENA · Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fcebe0;--band:#f8e6da;--card:#fff3ec;--acc:#cd9580;--accd:#b87d66;--tx:#4a3f3b;--mu:#8a7a73;--ok:#4f8a5b;--bad:#b3402f}
+*{box-sizing:border-box;margin:0}body{font-family:Outfit,sans-serif;background:var(--bg);color:var(--tx);line-height:1.5}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;color:var(--acc);font-weight:600;line-height:1.15}
+header{background:var(--band);border-bottom:1px solid #e9cdbd;position:sticky;top:0;z-index:10}
+.bar{max-width:1000px;margin:auto;padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bar h1{font-size:28px;letter-spacing:.2em;margin-right:auto}
+.wrap{max-width:1000px;margin:auto;padding:22px 18px 80px}
+.btn{display:inline-block;background:var(--acc);color:#fff;border:0;border-radius:30px;padding:10px 22px;font:500 14px Outfit;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--accd)}.btn.o{background:transparent;color:var(--accd);border:1.5px solid var(--acc)}.btn.r{background:transparent;color:var(--bad);border:1.5px solid var(--bad)}.btn.s{padding:6px 14px;font-size:13px}.btn[disabled]{opacity:.55;cursor:wait}
+.tabs{display:flex;gap:8px;margin-bottom:20px}.tabs button{background:var(--card);border:1px solid #e3c4b3;color:var(--tx);border-radius:30px;padding:8px 20px;font:400 14px Outfit;cursor:pointer}.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.tool{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}.tool input{flex:1;min-width:200px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid #e3c4b3;border-radius:12px;background:#fff;font:400 15px Outfit;color:var(--tx)}
+label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
+.box{background:var(--card);border:1px solid #efd3c4;border-radius:22px;padding:22px}
+.row{display:flex;gap:14px;align-items:center;padding:14px 16px;background:var(--card);border:1px solid #efd3c4;border-radius:18px;margin-bottom:10px;cursor:pointer;flex-wrap:wrap}.row:hover{border-color:var(--acc)}
+.row .m{flex:1;min-width:200px}.row b{font-weight:500}.row small{display:block;color:var(--mu)}
+.tag{font-size:12px;border-radius:20px;padding:2px 12px;background:#fff;border:1px solid #e3c4b3;white-space:nowrap}.tag.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 14px}
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.steps button{border:1.5px solid #e3c4b3;background:#fff;border-radius:14px;padding:8px 12px;font:400 13px Outfit;cursor:pointer;text-align:left;color:var(--tx)}
+.steps button.d{background:var(--acc);border-color:var(--acc);color:#fff}.steps button.c{border-color:var(--acc);box-shadow:0 0 0 3px rgba(205,149,128,.3);font-weight:500}.steps small{display:block;font-size:11px;opacity:.85}
+.sw{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:12px 14px;margin-top:10px;cursor:pointer;font-size:15px;color:var(--tx)}.sw input{width:auto}.sw small{color:var(--mu);display:block}
+.dc{display:flex;gap:10px;align-items:center;background:#fff;border-radius:14px;padding:10px 14px;margin-top:8px;flex-wrap:wrap;font-size:14px}.dc span{flex:1;min-width:160px;overflow-wrap:anywhere}.dc small{display:block;color:var(--mu)}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--tx);color:#fff;padding:10px 22px;border-radius:30px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90%}#toast.on{opacity:1}#toast.bad{background:var(--bad)}
+.hint{color:var(--mu);font-size:13px;margin-top:6px}[hidden]{display:none!important}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.chips button{background:var(--card);border:1px solid #e3c4b3;border-radius:20px;padding:4px 12px;font:400 12px Outfit;cursor:pointer;color:var(--tx)}.chips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.pk{max-height:210px;overflow:auto;border:1px solid #efd3c4;border-radius:12px}.pkr{display:flex;gap:10px;align-items:center;padding:7px 12px;border-bottom:1px solid #f5e3d8;cursor:pointer;font-size:14px}.pkr:last-child{border:0}.pkr:hover{background:var(--card)}.pkr span{flex:1}.pkr small{color:var(--mu)}.pkr b{color:var(--accd);font-size:18px}
+.otros{margin-top:14px}.orow{display:flex;gap:8px;flex-wrap:wrap}.orow input:nth-child(1){flex:3;min-width:160px}.orow input:nth-child(2){width:70px}.orow input:nth-child(3){width:120px}
+.kl{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f5e3d8;flex-wrap:wrap;font-size:14px}.kn{width:24px;color:var(--mu)}.kt{flex:1;min-width:140px}.kl input{width:100px;padding:6px 8px;font-size:13px}.ks{min-width:80px;text-align:right;font-weight:500}
+.qt{display:flex;align-items:center;gap:6px}.qt button{width:26px;height:26px;border-radius:50%;border:1px solid var(--acc);background:#fff;color:var(--accd);cursor:pointer}
+</style>
+</head>
+<body>
+<header><div class="bar"><h1>ALENA</h1><span style="color:var(--mu);font-size:14px">Panel del equipo</span><a class="btn o s" href="/">Ver sitio</a><button class="btn o s" onclick="salir()">Cerrar sesión</button></div></header>
+<div class="wrap">
+<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-o" onclick="tab('o')">Opiniones<span id="o_n"></span></button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
+
+<!-- LISTA -->
+<div id="v-list">
+<div class="tool"><input id="busca" placeholder="Buscar por nombre, cédula, celular o número de pedido…" oninput="lista()"><button class="btn" onclick="nuevo()">＋ Nuevo pedido</button></div>
+<div id="lista"></div>
+</div>
+
+<!-- EDITOR -->
+<div id="v-edit" hidden>
+<button class="btn o s" onclick="volver()">← Volver</button>
+<div class="box" style="margin-top:14px">
+<h2 id="e-tit" style="font-size:30px">Nuevo pedido</h2>
+<div class="g2">
+<div><label>Nombre del cliente *</label><input id="e_nombre" maxlength="120"></div>
+<div><label>Cédula</label><input id="e_cedula" inputmode="numeric" placeholder="Solo números"></div>
+<div><label>Celular</label><input id="e_tel" inputmode="numeric" placeholder="3001234567"></div>
+<div><label>Modalidad</label><select id="e_mod" onchange="E.modalidad=this.value;pintaPasos();recVis()"><option value="alquiler">Alquiler simple</option><option value="decoracion">Decoración con montaje</option></select></div>
+<div><label>Tipo de evento</label><input id="e_tipo" maxlength="120" placeholder="Bautizo, quince años…"></div>
+<div><label>Fecha del evento</label><input id="e_fecha" type="date"></div>
+</div>
+<label>Lugar</label><input id="e_lugar" maxlength="200">
+<div id="e_rec_w"><label>Recogida programada <span class="hint">(solo alquiler · el cliente la verá en su línea de tiempo)</span></label><input id="e_rec" maxlength="500" placeholder="Ej: Jueves 28 de nov., 10:00 a. m. — pasamos por las piezas"></div>
+
+<label>Estado del pedido (toca el paso actual)</label><div class="steps" id="e_pasos"></div>
+
+<label>Mensaje para el cliente <span class="hint">(lo verá en su página)</span></label><textarea id="e_msg" rows="2" maxlength="1500" placeholder="Ej: Tu cotización ya está lista. Recuerda confirmar la reserva con el abono."></textarea>
+<label>Piezas y servicios del pedido</label>
+<div class="box" style="background:#fff;padding:14px">
+<input id="k_q" placeholder="Buscar en el catálogo…" oninput="pintaCat()">
+<div class="chips" id="k_cats"></div>
+<div class="pk" id="k_res"></div>
+<div class="otros"><b>Otros</b> <span class="hint">(lo que no está en el catálogo)</span>
+<div class="chips"><button type="button" onclick="quick('Globos')">Globos</button><button type="button" onclick="quick('Montaje y desmontaje')">Montaje y desmontaje</button><button type="button" onclick="quick('Transporte')">Transporte</button></div>
+<div class="orow"><input id="o_n" placeholder="Descripción (ej: Globos)" maxlength="120"><input id="o_c" type="number" min="1" value="1" title="Cantidad"><input id="o_p" type="number" min="0" step="1000" placeholder="Valor c/u"><button type="button" class="btn s" onclick="addOtro()">Agregar</button></div></div>
+<h4 style="font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:16px 0 4px">Lista del pedido</h4>
+<div id="k_list"></div><p class="hint" id="k_sum" style="text-align:right;font-weight:500"></p></div>
+<label>Detalles adicionales <span class="hint">(opcional, lo verá el cliente)</span></label><textarea id="e_det" rows="3" maxlength="4000" placeholder="Ej: colores, horario de montaje…"></textarea>
+<div class="g2">
+<div><label>Valor total (COP) <span class="hint">se suma solo desde la lista</span></label><input id="e_total" type="number" min="0" step="1000"></div>
+<div><label>Abonado (COP)</label><input id="e_abono" type="number" min="0" step="1000"></div>
+<div><label>Depósito de garantía (COP)</label><input id="e_dep" type="number" min="0" step="1000"></div>
+</div>
+<label>Notas internas <span class="hint">(el cliente NO las ve)</span></label><textarea id="e_int" rows="2" maxlength="4000"></textarea>
+
+<label class="sw"><input type="checkbox" id="e_vis"><span>Habilitar para el cliente<small>Si está activo, el cliente puede ver este pedido con su cédula o celular y su PIN.</small></span></label>
+<div id="e_pin" class="sw" style="cursor:default;flex-wrap:wrap" hidden><span>PIN del cliente<small>Se lo envías una sola vez por WhatsApp. Con su cédula o celular y este PIN entra a ver su pedido.</small></span><b id="e_pinv" style="font:600 26px Outfit;letter-spacing:.2em;color:var(--accd)"></b><button type="button" class="btn o s" onclick="copiaPin()">Copiar</button><button type="button" class="btn o s" onclick="nuevoPin()">Generar nuevo</button></div>
+
+<div id="e_docs" hidden>
+<h3 style="font-size:24px;margin-top:26px">Documentos</h3>
+<div id="e_doclist"></div>
+<div class="g2" style="margin-top:6px">
+<div><label>Tipo</label><select id="d_cat"><option value="cotizacion">Cotización</option><option value="conformidad">Conformidad firmada</option><option value="recibo">Recibo / comprobante</option><option value="foto">Fotos (entrega / devolución)</option><option value="otro">Otro</option></select></div>
+<div><label>Archivo (PDF, JPG, PNG · máx. 3 MB)</label><input id="d_file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp"></div>
+</div>
+<label class="sw"><input type="checkbox" id="d_pub" checked><span>Visible para el cliente<small>Desmárcalo para guardar el documento solo para el equipo.</small></span></label>
+<div class="acts"><button class="btn s" id="d_go" onclick="subir()">Subir documento</button></div>
+</div>
+<p class="hint" id="e_nodocs">Guarda el pedido para poder subir documentos.</p>
+
+<div class="acts"><button class="btn" id="e_save" onclick="guardar()">Guardar pedido</button>
+<button class="btn o" id="e_wa" onclick="avisar()" hidden>Enviar enlace al cliente</button>
+<button class="btn r" id="e_del" onclick="borrar()" hidden>Eliminar</button></div>
+</div></div>
+
+<!-- AJUSTES -->
+<div id="v-op" hidden><p class="hint">Solo las opiniones aprobadas aparecen en la sección pública «Opiniones». Los clientes las envían desde «Mi pedido» cuando su evento ya ocurrió.</p><div id="op_list"></div></div>
+<div id="v-aj" hidden>
+<div class="box"><h3 style="font-size:26px">Consulta de pedidos para clientes</h3>
+<label class="sw"><input type="checkbox" id="a_portal" onchange="guardaAjustes('portal')"><span>Habilitar «Mi pedido» en el sitio<small>Muestra el menú «Mi pedido» y permite que los clientes ingresen con su cédula o celular. Apagado = nadie puede consultar nada.</small></span></label>
+<p class="hint">Enlace para compartir con clientes: <b id="a_link"></b></p></div>
+
+<div class="box" style="margin-top:18px"><h3 style="font-size:26px">Carrusel de Instagram</h3>
+<p class="hint">Pega un enlace de publicación o reel por línea (máx. 12), por ejemplo <i>https://www.instagram.com/p/XXXXXXXX/</i>. Instagram → publicación → ⋯ → Copiar enlace. Si lo dejas vacío, el sitio muestra fotos del catálogo.</p>
+<textarea id="a_ig" rows="6" placeholder="https://www.instagram.com/p/…&#10;https://www.instagram.com/reel/…"></textarea>
+<div class="acts"><button class="btn" onclick="guardaAjustes('ig')">Guardar carrusel</button></div></div>
+</div>
+</div>
+<div id="toast"></div>
+
+<script>
+const $=i=>document.getElementById(i);
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cop=n=>'$'+Number(n||0).toLocaleString('es-CO');
+let TOKEN='';try{TOKEN=sessionStorage.getItem('alena_admin')||''}catch(e){}
+if(!TOKEN)location.replace('/#pedido');
+let D={pedidos:[],pasos:{},ajustes:{portal:false,instagram:[]}},E=null;
+
+async function A(accion,extra={}){
+  let r;try{r=await fetch('/api/admin',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({accion,...extra})})}
+  catch(e){throw new Error('Sin conexión con el servidor.')}
+  let d={};try{d=await r.json()}catch(e){}
+  if(r.status==401){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.replace('/#pedido');throw new Error('Sesión vencida.')}
+  if(!r.ok)throw new Error(d.error||'No se pudo completar la acción.');return d}
+function toast(m,bad){const t=$('toast');t.textContent=m;t.className='on'+(bad?' bad':'');clearTimeout(toast._t);toast._t=setTimeout(()=>t.className='',3200)}
+function salir(){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.href='/'}
+function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o'}
+
+async function cargar(){try{D=await A('listar');lista();ajustes();opis()}catch(e){toast(e.message,1)}}
+function lista(){const q=$('busca').value.trim().toLowerCase(),qd=q.replace(/\D/g,'');
+const L=D.pedidos.filter(p=>!q||[p.nombre,p.tipo_evento,p.ref].some(x=>String(x||'').toLowerCase().includes(q))||(qd&&[p.cedula,p.telefono].some(x=>(x||'').includes(qd))));
+$('lista').innerHTML=L.length?L.map(p=>{const pasos=D.pasos[p.modalidad]||[];return`<div class="row" onclick="editar(${p.id})"><div class="m"><b>${esc(p.nombre)}</b><small>${esc(p.ref)} · ${esc(p.tipo_evento||'Sin tipo')}${p.fecha_evento?' · '+esc(p.fecha_evento.split('-').reverse().join('/')):''}</small><small>${esc([p.cedula&&'CC '+p.cedula,p.telefono&&'Cel '+p.telefono].filter(Boolean).join(' · '))}</small></div>
+<span class="tag">${esc(pasos[p.paso]||'')}</span><span class="tag ${p.visible?'on':''}">${p.visible?'Visible al cliente':'Oculto'}</span></div>`}).join(''):'<div class="box" style="text-align:center;color:var(--mu)">'+(D.pedidos.length?'Sin resultados.':'Aún no hay pedidos. Crea el primero con «Nuevo pedido».')+'</div>'}
+
+function nuevo(){abrir({id:null,nombre:'',cedula:'',telefono:'',modalidad:'alquiler',tipo_evento:'',fecha_evento:'',lugar:'',paso:0,historial:{},mensaje:'',detalle:'',total:0,abonado:0,deposito:0,notas_internas:'',visible:false,docs:[]})}
+function editar(id){abrir(JSON.parse(JSON.stringify(D.pedidos.find(p=>p.id==id))))}
+function abrir(p){E=p;$('v-list').hidden=true;$('v-edit').hidden=false;$('v-aj').hidden=true;
+$('e-tit').textContent=p.id?`${p.ref} · ${p.nombre}`:'Nuevo pedido';
+$('e_nombre').value=p.nombre||'';$('e_cedula').value=p.cedula||'';$('e_tel').value=p.telefono||'';$('e_mod').value=p.modalidad;$('e_rec').value=p.recogida||'';recVis();$('e_tipo').value=p.tipo_evento||'';
+$('e_fecha').value=p.fecha_evento||'';$('e_lugar').value=p.lugar||'';$('e_msg').value=p.mensaje||'';$('e_det').value=p.detalle||'';
+$('e_total').value=p.total||'';$('e_abono').value=p.abonado||'';$('e_dep').value=p.deposito||'';$('e_int').value=p.notas_internas||'';$('e_vis').checked=!!p.visible;
+$('e_pin').hidden=!p.id;$('e_pinv').textContent=p.pin||'';$('e_docs').hidden=!p.id;$('e_nodocs').hidden=!!p.id;$('e_del').hidden=!p.id;$('e_wa').hidden=!p.id;
+E.items=Array.isArray(p.items)?p.items:[];$('k_q').value='';CATSEL=0;pintaCat();items(false);pintaPasos();pintaDocs();window.scrollTo(0,0)}
+const CATS=['Todo','Estructuras','Mobiliario','Postres y torteros','Iluminación','Fondos en tela','Neones','Números gigantes','Alfombras','Personajes'];
+const CATALOGO=[["Bandeja de exhibición",15000,3],["Torteros dorados (c/u)",15000,3],["Torteros dorados (set x3)",30000,3],["Soporte de postres encaje",15000,3],["Soporte de postres carruaje",20000,3],["Torteros de cristal (c/u)",20000,3],["Torteros de cristal (set x3)",50000,3],["12 velas LED",25000,4],["Portavelas x3",20000,4],["Flor nube",10000,4],["Tela niño o niña",15000,5],["Tela rosa",15000,5],["Tela azul",15000,5],["Tela blanca",15000,5],["Neón “Mis Quince Años”",50000,6],["Neón “Mi Bautizo”",50000,6],["Neón “Feliz Cumpleaños”",50000,6],["Neón “Congrats Grad”",50000,6],["Alfombra café/beige",40000,8],["Alfombra gris claro",40000,8],["Arco ovalado (c/u)",20000,1],["Arcos ovalados (las tres)",50000,1],["Estructura circular",50000,1],["Estructura corazón",50000,1],["Estructura cuadrada",50000,1],["Mesa redonda (c/u)",20000,1],["Mesas redondas (las tres)",50000,1],["Silla trono",150000,2],["Neón “Siempre fuiste tú”",50000,6],["Neón “Mejor juntos”",50000,6],["Neón “Feliz cumpleaños” (inglés)",50000,6],["Neón “Juntos para siempre”",50000,6],["Neón “Oh bebé”",50000,6],["Neón “¿Quieres casarte conmigo?”",50000,6],["Número gigante 0",50000,7],["Número gigante 1",50000,7],["Número gigante 2",50000,7],["Número gigante 3",50000,7],["Número gigante 4",50000,7],["Número gigante 5",50000,7],["Número gigante 6",50000,7],["Número gigante 7",50000,7],["Número gigante 8",50000,7],["Número gigante 9",50000,7],["Woody",50000,9],["Tiro al Blanco",50000,9],["Jessie",50000,9],["Guerreras KPop",50000,9],["Winnie Poh",50000,9],["Igor",50000,9],["Buzz",50000,9],["Stitch",50000,9],["Sailor Moon",50000,9],["Mickey Mouse",65000,9],["Bluey Heeler",50000,9],["Bingo Heeler",50000,9],["Jefe en pañales",50000,9],["Goku bebé",50000,9],["Niña graduada",50000,9],["Snoopy",50000,9],["Jirafa",50000,9],["León",65000,9],["Oveja",50000,9],["Ángel",50000,9],["Vaquita",50000,9],["Cebra",50000,9],["Conejo",50000,9],["Bebé burro Shrek",50000,9],["Elefante",50000,9],["Bebés Shrek",50000,9],["Hada luna",50000,9],["Hada hoja",50000,9],["Conejo mariposa",50000,9],["Conejo bailarina",50000,9]];
+let CATSEL=0;
+function pintaCat(){$('k_cats').innerHTML=CATS.map((c,i)=>`<button type="button" class="${i==CATSEL?'on':''}" onclick="CATSEL=${i};pintaCat()">${esc(c)}</button>`).join('');
+const nz=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),q=nz($('k_q').value).split(/\s+/).filter(Boolean);
+const L=CATALOGO.map((x,i)=>[x,i]).filter(([x])=>(!CATSEL||x[2]==CATSEL)&&q.every(w=>nz(x[0]).includes(w)));
+$('k_res').innerHTML=L.length?L.map(([x,i])=>`<div class="pkr" onclick="addCat(${i})"><span>${esc(x[0])}</span><small>${cop(x[1])}</small><b>＋</b></div>`).join(''):'<p class="hint" style="padding:8px">Sin resultados.</p>'}
+function addCat(i){const x=CATALOGO[i],f=E.items.find(it=>it.n==x[0]&&it.p==x[1]);if(f)f.c++;else E.items.push({n:x[0],c:1,p:x[1]});items(true)}
+function addOtro(){const n=$('o_n').value.trim(),c=parseInt($('o_c').value,10)||1,p=parseInt($('o_p').value,10)||0;if(!n)return toast('Escribe qué es (ej: Globos).',1);
+E.items.push({n,c,p});$('o_n').value='';$('o_p').value='';$('o_c').value=1;items(true)}
+function quick(t){$('o_n').value=t;$('o_p').focus()}
+function qty(i,d){E.items[i].c=Math.max(1,Math.min(999,E.items[i].c+d));items(true)}
+function items(setTotal){const L=E.items;
+$('k_list').innerHTML=L.length?L.map((it,i)=>`<div class="kl"><span class="kn">${i+1}.</span><span class="kt">${esc(it.n)}</span><span class="qt"><button type="button" onclick="qty(${i},-1)">–</button><b>${it.c}</b><button type="button" onclick="qty(${i},1)">+</button></span><input type="number" min="0" step="1000" value="${it.p}" title="Valor c/u" onchange="E.items[${i}].p=parseInt(this.value,10)||0;items(true)"><span class="ks">${cop(it.c*it.p)}</span><button type="button" class="btn r s" onclick="E.items.splice(${i},1);items(true)">✕</button></div>`).join(''):'<p class="hint">Aún no hay nada. Toca una pieza del catálogo o agrega algo en «Otros».</p>';
+const sum=L.reduce((a,it)=>a+it.c*it.p,0);$('k_sum').textContent=L.length?'Suma de la lista: '+cop(sum):'';if(setTotal&&L.length)$('e_total').value=sum}
+function volver(){E=null;tab('p');lista()}
+function pintaPasos(){const P=D.pasos[E.modalidad]||[];if(E.paso>=P.length)E.paso=P.length-1;
+$('e_pasos').innerHTML=P.map((n,i)=>{const c=i<E.paso?'d':i==E.paso?'c':'';const f=E.historial&&E.historial[i]&&i<=E.paso?new Date(E.historial[i]).toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'}):'';
+return`<button type="button" class="${c}" onclick="E.paso=${i};pintaPasos()">${i+1}. ${esc(n)}${f?`<small>${f}</small>`:''}</button>`}).join('')}
+function pintaDocs(){const C={cotizacion:'Cotización',conformidad:'Conformidad',recibo:'Recibo',foto:'Fotos',otro:'Otro'};
+$('e_doclist').innerHTML=(E.docs||[]).length?E.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${C[d.categoria]||'Otro'} · ${Math.max(1,Math.round(d.tam/1024))} KB · ${d.publico?'visible al cliente':'solo equipo'}</small></span>
+<button class="btn o s" onclick="bajar(${d.id},'${esc(d.nombre).replace(/'/g,'')}')">Abrir</button><button class="btn o s" onclick="visDoc(${d.id},${!d.publico})">${d.publico?'Ocultar':'Mostrar'}</button><button class="btn r s" onclick="borraDoc(${d.id})">Quitar</button></div>`).join(''):'<p class="hint">Sin documentos todavía.</p>'}
+
+function leer(){const n=i=>parseInt($(i).value,10)||0;return{id:E.id,nombre:$('e_nombre').value,cedula:$('e_cedula').value,telefono:$('e_tel').value,modalidad:$('e_mod').value,tipo_evento:$('e_tipo').value,fecha_evento:$('e_fecha').value,lugar:$('e_lugar').value,recogida:$('e_rec').value,paso:E.paso,mensaje:$('e_msg').value,detalle:$('e_det').value,items:E.items,total:n('e_total'),abonado:n('e_abono'),deposito:n('e_dep'),notas_internas:$('e_int').value,visible:$('e_vis').checked}}
+async function guardar(){const b=$('e_save');b.disabled=true;
+try{const r=await A('guardar',{pedido:leer()});toast('Pedido guardado ✓');await cargar();
+const p=D.pedidos.find(x=>x.id==r.id);if(p)abrir(JSON.parse(JSON.stringify(p)))}catch(e){toast(e.message,1)}finally{b.disabled=false}}
+async function borrar(){if(!confirm(`¿Eliminar el pedido ${E.ref} y todos sus documentos? No se puede deshacer.`))return;
+try{await A('eliminar',{id:E.id});toast('Pedido eliminado');await cargar();volver()}catch(e){toast(e.message,1)}}
+function copiaPin(){navigator.clipboard.writeText(E.pin||'').then(()=>toast('PIN copiado'),()=>toast('No se pudo copiar',1))}
+async function nuevoPin(){if(!confirm('¿Generar un PIN nuevo? El anterior dejará de funcionar y tendrás que enviárselo al cliente otra vez.'))return;
+try{const r=await A('nuevo_pin',{id:E.id});E.pin=r.pin;$('e_pinv').textContent=r.pin;const p=D.pedidos.find(x=>x.id==E.id);if(p)p.pin=r.pin;toast('PIN nuevo generado ✓')}catch(e){toast(e.message,1)}}
+function avisar(){const url=location.origin+'/#pedido',tel=($('e_tel').value||'').replace(/\D/g,'');
+const m=`Hola ${$('e_nombre').value.split(' ')[0]} 👋 Ya puedes consultar el estado de tu pedido, tu cotización y tus documentos en:\n${url}\n\nToca «Ingresar con código», escribe tu cédula o celular y tu PIN personal: *${E.pin}*\n\nEs solo para ti, no lo compartas. ¡Gracias por confiar en ALENA!`;
+if(!$('e_vis').checked)toast('Recuerda activar «Habilitar para el cliente» y guardar.',1);
+if(tel.length==10)window.open(`https://api.whatsapp.com/send/?phone=57${tel}&text=${encodeURIComponent(m)}`,'_blank');
+else navigator.clipboard.writeText(m).then(()=>toast('Mensaje copiado'),()=>toast('No se pudo copiar',1))}
+
+/* ---- documentos ---- */
+function aB64(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=no;r.readAsDataURL(file)})}
+async function comprime(file){if(!file.type.startsWith('image/'))return{b64:await aB64(file),tipo:file.type,nombre:file.name};
+const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(file)});
+const k=Math.min(1,1600/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
+const b64=c.toDataURL('image/jpeg',.85).split(',')[1];return{b64,tipo:'image/jpeg',nombre:file.name.replace(/\.\w+$/,'')+'.jpg'}}
+async function subir(){const f=$('d_file').files[0];if(!f)return toast('Elige un archivo primero.',1);
+if(!['application/pdf','image/jpeg','image/png','image/webp'].includes(f.type))return toast('Solo PDF, JPG, PNG o WEBP.',1);
+if(f.type=='application/pdf'&&f.size>3*1024*1024)return toast('El PDF supera 3 MB.',1);
+const b=$('d_go');b.disabled=true;b.textContent='Subiendo…';
+try{const a=await comprime(f);if(a.b64.length*.75>3*1024*1024)throw new Error('El archivo supera 3 MB.');
+await A('subir_doc',{pedido_id:E.id,nombre:a.nombre,tipo:a.tipo,categoria:$('d_cat').value,publico:$('d_pub').checked,b64:a.b64});
+$('d_file').value='';toast('Documento subido ✓');await recarga()}catch(e){toast(e.message,1)}finally{b.disabled=false;b.textContent='Subir documento'}}
+async function recarga(){const paso=E.paso,form=leer();await cargar();const p=D.pedidos.find(x=>x.id==E.id);if(p){E.docs=p.docs;pintaDocs()}}
+async function visDoc(id,pub){try{await A('doc_publico',{id,publico:pub});await recarga()}catch(e){toast(e.message,1)}}
+async function borraDoc(id){if(!confirm('¿Quitar este documento?'))return;try{await A('eliminar_doc',{id});toast('Documento eliminado');await recarga()}catch(e){toast(e.message,1)}}
+async function bajar(id,nombre){try{const r=await fetch('/api/documento?id='+id,{headers:{Authorization:'Bearer '+TOKEN}});if(!r.ok)throw 0;const u=URL.createObjectURL(await r.blob());
+const a=document.createElement('a');a.href=u;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}catch(e){toast('No se pudo abrir el documento.',1)}}
+
+/* ---- ajustes ---- */
+function recVis(){$('e_rec_w').hidden=$('e_mod').value!='alquiler'}
+function opis(){const L=D.opiniones||[],pend=L.filter(o=>o.estado=='pendiente').length;$('o_n').textContent=pend?` (${pend})`:'';
+const ET={pendiente:'Pendiente de aprobar',aprobada:'Publicada',rechazada:'Oculta'};
+$('op_list').innerHTML=L.length?L.map(o=>`<div class="box" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>${esc(o.nombre)}</b><span style="color:#d4af37;letter-spacing:.1em">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</span></div><p style="margin:8px 0">${esc(o.texto)}</p><p class="hint">${esc(o.creado)} · Pedido ${o.pedido_id?'AL-'+String(o.pedido_id).padStart(4,'0'):'—'} · <b>${ET[o.estado]||o.estado}</b></p><div class="acts">${o.estado!='aprobada'?`<button class="btn s" onclick="opEstado(${o.id},'aprobada')">Aprobar y publicar</button>`:`<button class="btn o" onclick="opEstado(${o.id},'rechazada')">Ocultar</button>`}${o.estado=='pendiente'?`<button class="btn o" onclick="opEstado(${o.id},'rechazada')">Rechazar</button>`:''}<button class="btn r" onclick="opBorrar(${o.id})">Eliminar</button></div></div>`).join(''):'<p class="hint">Aún no hay opiniones de clientes.</p>'}
+async function opEstado(id,estado){try{await A('opinion_estado',{id,estado});await cargar();toast(estado=='aprobada'?'Opinión publicada ✓':'Opinión oculta')}catch(e){toast(e.message,1)}}
+async function opBorrar(id){if(!confirm('¿Eliminar esta opinión?'))return;try{await A('opinion_eliminar',{id});await cargar();toast('Opinión eliminada')}catch(e){toast(e.message,1)}}
+function ajustes(){$('a_portal').checked=!!D.ajustes.portal;$('a_ig').value=(D.ajustes.instagram||[]).map(c=>`https://www.instagram.com/${c}/`).join('\n');$('a_link').textContent=location.origin+'/#pedido'}
+async function guardaAjustes(que){try{const d=que=='portal'?{portal:$('a_portal').checked}:{instagram:$('a_ig').value.split(/\s+/).filter(Boolean)};
+const r=await A('ajustes',d);D.ajustes=r.ajustes;ajustes();toast(que=='portal'?(D.ajustes.portal?'Consulta de pedidos habilitada ✓':'Consulta de pedidos deshabilitada'):'Carrusel guardado ✓')}catch(e){toast(e.message,1);ajustes()}}
+
+if(TOKEN)cargar();
+</script>
+</body>
+</html>

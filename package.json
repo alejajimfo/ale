@@ -1,0 +1,11 @@
+{
+  "name": "alena-sitio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ALENA · Celebrar también es arte — sitio + portal de pedidos (Netlify + Neon)",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  }
+}
