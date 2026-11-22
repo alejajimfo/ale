@@ -38,6 +38,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 .pk{max-height:210px;overflow:auto;border:1px solid #efd3c4;border-radius:12px}.pkr{display:flex;gap:10px;align-items:center;padding:7px 12px;border-bottom:1px solid #f5e3d8;cursor:pointer;font-size:14px}.pkr:last-child{border:0}.pkr:hover{background:var(--card)}.pkr span{flex:1}.pkr small{color:var(--mu)}.pkr b{color:var(--accd);font-size:18px}
 .otros{margin-top:14px}.orow{display:flex;gap:8px;flex-wrap:wrap}.orow input:nth-child(1){flex:3;min-width:160px}.orow input:nth-child(2){width:70px}.orow input:nth-child(3){width:120px}
 .kl{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f5e3d8;flex-wrap:wrap;font-size:14px}.kn{width:24px;color:var(--mu)}.kt{flex:1;min-width:140px}.kl input{width:100px;padding:6px 8px;font-size:13px}.ks{min-width:80px;text-align:right;font-weight:500}
+.sug{margin:6px 0 10px}.sug .chips button{text-align:left;max-width:100%}
 .cta{margin-top:12px;border-top:1px dashed #e3c4b3;padding-top:10px;font-size:15px}.cta div{display:flex;justify-content:space-between;padding:3px 0}.cta .t{font-weight:600;font-size:17px}.cta .dep{color:var(--mu);font-size:14px}
 .row.fin{border-color:#d9534f;background:#fdeceb}.row.fin b{color:#b3261e}.tag.fin{background:#d9534f;border-color:#d9534f;color:#fff}.mes{font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:18px 0 6px}
 .fl{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}.fl button{border:1px solid var(--acc);background:#fff;border-radius:20px;padding:6px 16px;cursor:pointer;color:var(--accd);font:inherit;font-size:14px}.fl button.on{background:var(--acc);color:#fff}.fl select{width:auto;padding:6px 10px;font-size:14px}
@@ -47,7 +48,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <body>
 <header><div class="bar"><h1>ALENA</h1><span style="color:var(--mu);font-size:14px">Panel del equipo</span><a class="btn o s" href="/">Ver sitio</a><button class="btn o s" onclick="salir()">Cerrar sesión</button></div></header>
 <div class="wrap">
-<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-c" onclick="tab('c')">Códigos de descuento</button><button id="tb-o" onclick="tab('o')">Opiniones <span id="o_n" class="tag on" hidden></span></button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
+<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-c" onclick="tab('c')">Códigos de descuento</button><button id="tb-o" onclick="tab('o')">Opiniones <span id="op_badge" class="tag on" hidden></span></button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
 
 <!-- LISTA -->
 <div id="v-list">
@@ -74,6 +75,8 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <label>Estado del pedido (toca el paso actual)</label><div class="steps" id="e_pasos"></div>
 
 <label>Mensaje para el cliente <span class="hint">(lo verá en su página)</span></label><textarea id="e_msg" rows="2" maxlength="1500" placeholder="Ej: Tu cotización ya está lista. Recuerda confirmar la reserva con el abono."></textarea>
+<div class="sug"><small class="hint">Mensajes sugeridos para esta etapa (toca uno y se escribe aquí; puedes editarlo):</small><div id="e_sug" class="chips"></div>
+<div class="acts" style="margin-top:6px"><button type="button" class="btn o s" onclick="msgWA()">Enviar este mensaje por WhatsApp</button></div></div>
 <div id="e_rec_w"><label>Recogida programada <span class="hint">(solo alquiler: día, hora y lugar para recoger las piezas; el cliente lo ve en su línea de tiempo)</span></label><textarea id="e_rec" rows="2" maxlength="500" placeholder="Ej: Viernes 12 de diciembre, 3:00 p. m., en nuestro taller. Trae tu cédula."></textarea></div>
 <label>Piezas y servicios del pedido</label>
 <div class="box" style="background:#fff;padding:14px">
@@ -200,6 +203,34 @@ $('lista').innerHTML=L.length?L.map(p=>{const pasos=D.pasos[p.modalidad]||[],fin
 let h='';if(ORD!='nuevo'&&mesDe(p.fecha_evento)!=mes){mes=mesDe(p.fecha_evento);h=`<div class="mes">${esc(mes)}</div>`}
 return h+`<div class="row ${fin?'fin':''}" onclick="editar(${p.id})"><div class="m"><b>${esc(p.nombre)}</b><small>${esc(p.ref)} · ${esc(p.tipo_evento||'Sin tipo')}${p.fecha_evento?' · '+esc(p.fecha_evento.split('-').reverse().join('/')):''}</small><small>${esc([p.cedula&&'CC '+p.cedula,p.telefono&&'Cel '+p.telefono].filter(Boolean).join(' · '))}</small>${p.total?`<small>Total ${cop(neto)}${p.descuento?' (con desc. '+cop(p.descuento)+')':''} · Saldo ${saldo?cop(saldo):'pagado ✓'}</small>`:''}</div>
 <span class="tag ${fin?'fin':''}">${esc(pasos[p.paso]||'')}</span>${dep?`<span class="tag" style="border-color:#d9534f;color:#b3261e">Depósito por devolver ${cop(p.deposito-(p.deposito_devuelto||0))}</span>`:''}<span class="tag ${p.visible?'on':''}">${p.visible?'Visible al cliente':'Oculto'}</span></div>`}).join(''):'<div class="box" style="text-align:center;color:var(--mu)">'+(D.pedidos.length?(q?'Sin resultados.':FIL=='fin'?'Aún no hay pedidos finalizados.':'No hay pedidos en proceso.'):'Aún no hay pedidos. Crea el primero con «Nuevo pedido».')+'</div>'}
+/* ---- mensajes sugeridos por etapa ---- */
+const MSG={
+'Solicitud recibida':[['Recibimos tu solicitud','¡Hola {nombre}! 🌸 Recibimos tu solicitud con muchísima ilusión. Estamos revisando la disponibilidad para {fecha} y muy pronto te enviamos tu cotización. ¡Gracias por pensar en ALENA para tu celebración!'],['Gracias por escribirnos','Hola {nombre} 💛 ¡Gracias por escribirnos! Ya tenemos tu solicitud y la estamos revisando con cariño. En breve te contamos.']],
+'Cotización enviada':[['Tu cotización está lista','{nombre}, tu cotización ya está lista 🎀 Puedes verla y descargarla aquí mismo, en «Documentos». Si quieres cambiar o agregar algo, escríbenos y lo ajustamos. Para reservar tu fecha ({fecha}) solo falta confirmar con el abono.'],['Recordatorio amable','Hola {nombre} ✨ Te recordamos que tu cotización sigue disponible. Las fechas se reservan con el abono y no queremos que se nos cruce la tuya ({fecha}). ¿Te ayudamos con alguna duda?']],
+'Reserva confirmada':[['Fecha reservada','¡Tu fecha quedó reservada, {nombre}! 🎉 Recibimos tu abono y apartamos {fecha} para ti. Tu saldo pendiente es {saldo}. Cualquier detalle o cambio, aquí estamos para ti.']],
+'Diseño y preparación':[['Estamos preparando todo','Estamos en la parte más linda, {nombre} 🎨 Ya estamos diseñando y preparando todo para tu evento. Si quieres ajustar colores o detalles, avísanos con tiempo para dejarlo perfecto.']],
+'Montaje':[['Hoy es el montaje','¡Hoy es el montaje! 🛠️✨ Nuestro equipo ya está en {lugar} dejando todo hermoso para tu evento. Te avisamos apenas esté listo.']],
+'Evento':[['¡Feliz celebración!','¡Feliz celebración, {nombre}! 🥳 Hoy es tu gran día y queremos que lo disfrutes a lo grande. Gracias por confiar en ALENA. ¡Que sea inolvidable!']],
+'Desmontaje':[['Pasaremos a desmontar','Gracias por hacernos parte de tu evento, {nombre} 💛 Pasaremos a desmontar con mucho cuidado. Si puedes, déjanos el espacio despejado para hacerlo más rápido.']],
+'Piezas listas':[['Tus piezas están listas','¡Tus piezas ya están listas, {nombre}! 📦✨ Las revisamos una por una para que lleguen perfectas a tu evento. En breve coordinamos la recogida.']],
+'Recogida programada':[['Recogida programada','Coordinemos la recogida 📅 Quedó programada así: {recogida}. Por favor trae tu cédula y revisa las piezas con nosotros al recibirlas. Si necesitas cambiar la hora, avísanos con tiempo.'],['Recordatorio de recogida','Hola {nombre} 🌷 Te recordamos tu recogida programada: {recogida}. ¡Te esperamos!']],
+'Piezas entregadas':[['Piezas entregadas','¡Listo, {nombre}! 🎁 Ya tienes tus piezas. Cuídalas mucho y recuerda devolverlas en la fecha acordada. Si pasa algo o tienes dudas, escríbenos sin pena.']],
+'Devolución y revisión':[['Estamos revisando','Gracias por devolver las piezas, {nombre} 🙌 Las estamos revisando con calma. Apenas terminemos te confirmamos todo por aquí.']],
+'Finalizado':[['Gracias + pedir opinión','¡Pedido finalizado! 🌷 Gracias por dejarnos ser parte de tu celebración, {nombre}. Nos encantaría saber cómo te fue: aquí mismo, en «Mi pedido», puedes dejar tu opinión con estrellas ⭐. ¡Nos ayuda muchísimo!']]
+};
+const MSG_EXTRA=[['Recordar saldo','Hola {nombre} 💛 Te recordamos con cariño que tu saldo pendiente es {saldo}. Puedes cancelarlo antes de tu evento ({fecha}). ¡Gracias!'],['Depósito devuelto','¡Hola {nombre}! Ya te devolvimos tu depósito de garantía ({deposito}) ✅ Gracias por cuidar nuestras piezas. ¡Esperamos volver a decorar contigo pronto!'],['Pedir opinión','{nombre}, tu opinión vale oro 🌟 Entra a «Mi pedido» y cuéntanos cómo te fue con estrellas. ¡Gracias por confiar en ALENA!']];
+function msgVars(){const n=i=>parseInt($(i).value,10)||0,t=n('e_total'),d=Math.min(n('e_desc'),t),sal=Math.max(0,t-d-n('e_abono'));
+const f=$('e_fecha').value;return{nombre:($('e_nombre').value.trim().split(/\s+/)[0])||'',
+fecha:f?'el '+new Date(f+'T12:00:00').toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'}).replace(',',''):'tu fecha',
+lugar:$('e_lugar').value.trim()||'tu evento',saldo:t?cop(sal):'(por confirmar)',deposito:n('e_dep')?cop(n('e_dep')):'(por confirmar)',recogida:$('e_rec').value.trim()||'(por confirmar)'}}
+function pintaSug(){const el=$('e_sug');if(!el||!E)return;const P=D.pasos[E.modalidad]||[],nom=P[Math.min(E.paso,P.length-1)];
+const L=[...(MSG[nom]||[]).map(x=>[...x,1]),...MSG_EXTRA.map(x=>[...x,0])];
+el.innerHTML=L.map(([t,m,own],i)=>`<button type="button" class="${own?'on':''}" onclick="usaMsg(${i})" title="${esc(m)}">${own?'★ ':''}${esc(t)}</button>`).join('');window.__SUG=L}
+function usaMsg(i){const v=msgVars(),m=window.__SUG[i][1].replace(/\{(\w+)\}/g,(a,k)=>v[k]??a);
+if($('e_msg').value.trim()&&$('e_msg').value.trim()!=m&&!confirm('Esto reemplaza el mensaje que ya escribiste. ¿Continuar?'))return;$('e_msg').value=m.slice(0,1500);toast('Mensaje listo. Guarda el pedido para que el cliente lo vea.')}
+function msgWA(){const m=$('e_msg').value.trim();let t=($('e_tel').value||'').replace(/\D/g,'');if(t.length==10)t='57'+t;
+if(!m)return toast('Primero escribe o elige un mensaje.',1);if(t.length<11)return toast('Este pedido no tiene celular. Agrégalo para enviar por WhatsApp.',1);
+window.open(`https://api.whatsapp.com/send/?phone=${t}&text=${encodeURIComponent(m)}`,'_blank')}
 /* ---- códigos de descuento ---- */
 const nz2=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();
 function aplicarCod(){const c=D.codigos.find(x=>nz2(x.codigo)==nz2($('e_cod').value));if(!$('e_cod').value.trim())return toast('Escribe el código.',1);
@@ -259,7 +290,7 @@ function items(setTotal){const L=E.items;
 $('k_list').innerHTML=L.length?L.map((it,i)=>`<div class="kl"><span class="kn">${i+1}.</span><span class="kt">${esc(it.n)}</span><span class="qt"><button type="button" onclick="qty(${i},-1)">–</button><b>${it.c}</b><button type="button" onclick="qty(${i},1)">+</button></span><input type="number" min="0" step="1000" value="${it.p}" title="Valor c/u" onchange="E.items[${i}].p=parseInt(this.value,10)||0;items(true)"><span class="ks">${cop(it.c*it.p)}</span><button type="button" class="btn r s" onclick="E.items.splice(${i},1);items(true)">✕</button></div>`).join(''):'<p class="hint">Aún no hay nada. Toca una pieza del catálogo o agrega algo en «Otros».</p>';
 const sum=L.reduce((a,it)=>a+it.c*it.p,0);$('k_sum').textContent=L.length?'Suma de la lista: '+cop(sum):'';if(setTotal&&L.length){$('e_total').value=sum;cuentas()}}
 function volver(){E=null;tab('p');lista()}
-function pintaPasos(){$('e_rec_w').hidden=E.modalidad!='alquiler';const P=D.pasos[E.modalidad]||[];if(E.paso>=P.length)E.paso=P.length-1;
+function pintaPasos(){pintaSug();$('e_rec_w').hidden=E.modalidad!='alquiler';const P=D.pasos[E.modalidad]||[];if(E.paso>=P.length)E.paso=P.length-1;
 $('e_pasos').innerHTML=P.map((n,i)=>{const c=i<E.paso?'d':i==E.paso?'c':'';const f=E.historial&&E.historial[i]&&i<=E.paso?new Date(E.historial[i]).toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'}):'';
 return`<button type="button" class="${c}" onclick="E.paso=${i};pintaPasos()">${i+1}. ${esc(n)}${f?`<small>${f}</small>`:''}</button>`}).join('')}
 function pintaDocs(){const C={cotizacion:'Cotización',conformidad:'Conformidad',recibo:'Recibo',foto:'Fotos',otro:'Otro'};
@@ -302,8 +333,8 @@ async function bajar(id,nombre){try{const r=await fetch('/api/documento?id='+id,
 const a=document.createElement('a');a.href=u;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}catch(e){toast('No se pudo abrir el documento.',1)}}
 
 /* ---- opiniones ---- */
-async function pend(){try{const r=await A('opiniones');const n=r.opiniones.filter(o=>o.estado=='pendiente').length;$('o_n').textContent=n;$('o_n').hidden=!n}catch(e){}}
-async function opiniones(){try{const r=await A('opiniones');const L=r.opiniones;const n=L.filter(o=>o.estado=='pendiente').length;$('o_n').textContent=n;$('o_n').hidden=!n;
+async function pend(){try{const r=await A('opiniones');const n=r.opiniones.filter(o=>o.estado=='pendiente').length;$('op_badge').textContent=n;$('op_badge').hidden=!n}catch(e){}}
+async function opiniones(){try{const r=await A('opiniones');const L=r.opiniones;const n=L.filter(o=>o.estado=='pendiente').length;$('op_badge').textContent=n;$('op_badge').hidden=!n;
 $('op_lista').innerHTML=L.length?L.map(o=>`<div class="box" style="margin-top:12px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>${esc(o.autor)}</b><span style="color:#d4a017;letter-spacing:2px">${'★'.repeat(o.estrellas)}${'☆'.repeat(5-o.estrellas)}</span><small style="color:var(--mu)">${esc(o.ref)} · ${esc(o.tipo_evento||'')} · ${esc(o.fecha)}</small><span class="tag ${o.estado=='aprobada'?'on':''}">${o.estado=='pendiente'?'Pendiente':o.estado=='aprobada'?'Publicada':'Rechazada'}</span></div>
 <p style="margin:10px 0">${esc(o.texto)}</p><div class="acts">${o.estado!='aprobada'?`<button class="btn s" onclick="opEstado(${o.id},'aprobada')">Aprobar y publicar</button>`:`<button class="btn o s" onclick="opEstado(${o.id},'pendiente')">Quitar del sitio</button>`}${o.estado=='pendiente'?`<button class="btn o s" onclick="opEstado(${o.id},'rechazada')">Rechazar</button>`:''}<button class="btn r s" onclick="opBorrar(${o.id})">Eliminar</button></div></div>`).join(''):'<div class="box" style="text-align:center;color:var(--mu);margin-top:12px">Aún no hay opiniones. Aparecerán aquí cuando un cliente deje la suya desde «Mi pedido».</div>'}catch(e){toast(e.message,1)}}
 async function opEstado(id,estado){try{await A('opinion_estado',{id,estado});toast(estado=='aprobada'?'Publicada ✓':'Listo');opiniones()}catch(e){toast(e.message,1)}}
