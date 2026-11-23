@@ -3,7 +3,9 @@
 //
 // GET  /api/extras                        -> opiniones APROBADAS (público)
 // POST /api/extras {accion} + Bearer admin   : recogidas | recogida_guardar | opiniones_listar | opinion_estado | opinion_eliminar
+//                                             codigos_listar | codigo_crear | codigo_editar | codigo_eliminar
 // POST /api/extras {accion} + Bearer cliente : mio | opinar
+// POST /api/extras {accion} sin token        : codigo_validar
 import { ensureSchema, fallo, json, q, tokenDe, verificar } from '../lib/util.mjs';
 
 const PASO_MIN_OPINION = 5; // alquiler: desde «Evento» en adelante el cliente puede opinar
@@ -27,6 +29,15 @@ function esquemaExtra() {
       )`);
       // Precios de descuento privados del equipo (nunca se envían a clientes ni al público)
       await q(`CREATE TABLE IF NOT EXISTS precios_desc (nombre text PRIMARY KEY, precio int NOT NULL)`);
+      // Códigos de descuento: valor fijo en COP que el equipo crea y el cliente puede canjear en el carrito
+      await q(`CREATE TABLE IF NOT EXISTS codigos_descuento (
+        id serial PRIMARY KEY,
+        codigo text NOT NULL UNIQUE,
+        valor int NOT NULL,
+        activo boolean NOT NULL DEFAULT true,
+        descripcion text,
+        creado timestamptz NOT NULL DEFAULT now()
+      )`);
     })().catch((e) => { _listo = null; throw e; });
   }
   return _listo;
@@ -87,6 +98,37 @@ async function admin(b) {
       await q(`DELETE FROM opiniones WHERE id = $1::int`, [parseInt(b.id, 10)]);
       return json({ ok: true });
     }
+    // ---- Códigos de descuento ----
+    case 'codigos_listar': {
+      const r = await q(`SELECT id, codigo, valor, activo, descripcion,
+        to_char(creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS creado
+        FROM codigos_descuento ORDER BY creado DESC`);
+      return json({ codigos: r });
+    }
+    case 'codigo_crear': {
+      const cod = texto(b.codigo, 40);
+      const val = parseInt(b.valor, 10);
+      if (!cod) return json({ error: 'El código no puede estar vacío.' }, 400);
+      if (!(val > 0)) return json({ error: 'El valor debe ser mayor a 0.' }, 400);
+      const codUp = cod.toUpperCase().replace(/\s+/g, '');
+      await q(`INSERT INTO codigos_descuento (codigo, valor, activo, descripcion)
+               VALUES ($1, $2::int, $3::boolean, $4)`,
+        [codUp, val, b.activo !== false, texto(b.descripcion, 200) || null]);
+      return json({ ok: true });
+    }
+    case 'codigo_editar': {
+      const id = parseInt(b.id, 10);
+      const val = parseInt(b.valor, 10);
+      if (!Number.isInteger(id)) return json({ error: 'ID no válido.' }, 400);
+      if (!(val > 0)) return json({ error: 'El valor debe ser mayor a 0.' }, 400);
+      await q(`UPDATE codigos_descuento SET valor = $2::int, activo = $3::boolean, descripcion = $4 WHERE id = $1::int`,
+        [id, val, b.activo !== false, texto(b.descripcion, 200) || null]);
+      return json({ ok: true });
+    }
+    case 'codigo_eliminar': {
+      await q(`DELETE FROM codigos_descuento WHERE id = $1::int`, [parseInt(b.id, 10)]);
+      return json({ ok: true });
+    }
     default: return json({ error: 'Acción no reconocida.' }, 400);
   }
 }
@@ -128,9 +170,17 @@ export default async (req) => {
     await esquemaExtra();
     if (req.method === 'GET') return await publicas();
     if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);
+    // Validar código de descuento: acción pública, sin token
+    const b = await req.json().catch(() => ({}));
+    if (b.accion === 'codigo_validar') {
+      const cod = String(b.codigo || '').trim().toUpperCase().replace(/\s+/g, '');
+      if (!cod) return json({ error: 'Escribe un código.' }, 400);
+      const r = await q(`SELECT valor FROM codigos_descuento WHERE codigo = $1 AND activo`, [cod]);
+      if (!r.length) return json({ error: 'Código no válido o inactivo.' }, 400);
+      return json({ ok: true, valor: r[0].valor });
+    }
     const t = verificar(tokenDe(req));
     if (!t) return json({ error: 'Sesión vencida. Vuelve a ingresar.' }, 401);
-    const b = await req.json().catch(() => ({}));
     if (t.rol === 'admin') return await admin(b);
     if (t.rol === 'cliente') return await cliente(t, b);
     return json({ error: 'No autorizado.' }, 401);

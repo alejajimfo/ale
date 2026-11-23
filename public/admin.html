@@ -49,7 +49,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <body>
 <header><div class="bar"><h1>ALENA</h1><span style="color:var(--mu);font-size:14px">Panel del equipo</span><a class="btn o s" href="/">Ver sitio</a><button class="btn o s" onclick="salir()">Cerrar sesión</button></div></header>
 <div class="wrap">
-<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-c" onclick="tab('c')">Códigos <b id="nc"></b></button><button id="tb-cl" onclick="tab('cl')">Clientes</button><button id="tb-pr" onclick="tab('pr')">Mis precios</button><button id="tb-o" onclick="tab('o')">Opiniones</button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
+<div class="tabs"><button id="tb-p" class="on" onclick="tab('p')">Pedidos</button><button id="tb-c" onclick="tab('c')">Códigos <b id="nc"></b></button><button id="tb-cl" onclick="tab('cl')">Clientes</button><button id="tb-pr" onclick="tab('pr')">Mis precios</button><button id="tb-dc" onclick="tab('dc')">Descuentos</button><button id="tb-o" onclick="tab('o')">Opiniones</button><button id="tb-a" onclick="tab('a')">Ajustes del sitio</button></div>
 
 <!-- LISTA -->
 <div id="v-list">
@@ -130,10 +130,31 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <!-- MIS PRECIOS -->
 <div id="v-pr" hidden>
 <div class="box"><h3 style="font-size:26px">Mis precios de descuento</h3>
-<p class="hint">🔒 Solo tú ves esta pantalla. Los clientes nunca ven estos precios ni el del catálogo: en su pedido solo aparece el valor final. Deja vacío el valor de las piezas que no tengan descuento. Al armar un pedido, activa «Usar mis precios de descuento» para que se apliquen.</p>
+<p class="hint">🔒 Solo tú ves esta pantalla. Los clientes nunca ven estos precios ni el del catálogo: en su pedido solo aparece el valor final. Deja vacío el valor de las piezas que no tengan descuento. Al armar un pedido, activa «Usar mis precios de descuento» para que se apliquen.<br><b>El % que ves aquí es informativo</b>: se calcula comparando tu precio con el del catálogo, para que sepas cuánto estás bajando.</p>
 <div class="tool" style="margin-top:12px"><input id="pr_q" placeholder="Buscar pieza…" oninput="filtraPrecios()"><input id="pr_pct" type="number" min="1" max="90" placeholder="% desc." style="max-width:110px;flex:none"><button class="btn o s" onclick="aplicaPct()">Llenar vacíos con ese %</button></div>
 <div id="pr-lista"></div>
 <div class="acts"><button class="btn" id="pr_save" onclick="guardaPrecios()">Guardar mis precios</button></div></div>
+</div>
+
+<!-- DESCUENTOS (códigos que el cliente puede canjear en el carrito) -->
+<div id="v-dc" hidden>
+<div class="box">
+<h3 style="font-size:26px">Códigos de descuento</h3>
+<p class="hint">Crea los códigos que quieras darle a clientes especiales. Escribe el texto del código y el valor en COP que se descontará del total. El cliente lo ingresa en el carrito del sitio y ve el descuento como porcentaje sobre su total.</p>
+
+<div style="background:#fff;border-radius:16px;padding:16px;margin-top:14px">
+<b style="font-size:15px">Crear nuevo código</b>
+<div class="g2" style="margin-top:10px">
+  <div><label>Código (texto libre, sin espacios)</label><input id="dc_cod" placeholder="Ej: BODA2025" maxlength="40" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"></div>
+  <div><label>Valor del descuento (COP)</label><input id="dc_val" type="number" min="1000" step="1000" placeholder="Ej: 20000"></div>
+</div>
+<label>Descripción interna (opcional)</label><input id="dc_desc" placeholder="Ej: Para boda de Sofía" maxlength="200">
+<div class="acts" style="margin-top:12px"><button class="btn" onclick="crearCodigo()">Crear código</button></div>
+</div>
+
+<h4 style="font:500 13px Outfit;letter-spacing:.12em;text-transform:uppercase;color:var(--accd);margin:22px 0 8px">Códigos existentes</h4>
+<div id="dc-lista"><p class="hint">Cargando…</p></div>
+</div>
 </div>
 
 <!-- OPINIONES -->
@@ -209,9 +230,11 @@ ${(p.items||[]).length?`<small style="display:block;margin-top:4px">${p.items.ma
 $('cl-modal').hidden=false}
 function cierraCl(){$('cl-modal').hidden=true}
 
-/* ---- mis precios (privados) ---- */
+/* ---- mis precios: columna % informativo ---- */
 function pintaPrecios(){const P=D.precios||{};
-$('pr-lista').innerHTML=CATALOGO.map((x,i)=>`<div class="dr" data-n="${esc(x[0])}" data-b="${esc(x[0].toLowerCase())}"><span>${esc(x[0])}</span><small>Catálogo ${cop(x[1])}</small><input type="number" min="0" step="500" data-i="${i}" value="${P[x[0]]||''}" placeholder="Descuento"></div>`).join('');filtraPrecios()}
+$('pr-lista').innerHTML=CATALOGO.map((x,i)=>{const pDesc=P[x[0]]||'';const pct=pDesc&&x[1]>0?Math.round((1-pDesc/x[1])*100):null;
+return`<div class="dr" data-n="${esc(x[0])}" data-b="${esc(x[0].toLowerCase())}"><span>${esc(x[0])}</span><small>Catálogo ${cop(x[1])}</small><input type="number" min="0" step="500" data-i="${i}" value="${pDesc}" placeholder="Mi precio" oninput="actuPct(this,${i})"><span class="ks" id="pct${i}" style="min-width:52px;color:var(--ok);font-size:13px">${pct?'-'+pct+'%':''}</span></div>`}).join('');filtraPrecios()}
+function actuPct(inp,i){const v=parseInt(inp.value,10)||0,cat=CATALOGO[i][1];const s=document.getElementById('pct'+i);if(s)s.textContent=v>0&&cat>0?'-'+Math.round((1-v/cat)*100)+'%':'';}
 function filtraPrecios(){const nz=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),q=nz($('pr_q').value).split(/\s+/).filter(Boolean);
 document.querySelectorAll('#pr-lista .dr').forEach(r=>{r.hidden=!q.every(w=>nz(r.dataset.n).includes(w))})}
 function aplicaPct(){const k=parseInt($('pr_pct').value,10);if(!(k>0&&k<=90))return toast('Escribe un % entre 1 y 90.',1);
@@ -221,7 +244,7 @@ const b=$('pr_save');b.disabled=true;try{await X('precios_guardar',{precios:o});
 
 function toast(m,bad){const t=$('toast');t.textContent=m;t.className='on'+(bad?' bad':'');clearTimeout(toast._t);toast._t=setTimeout(()=>t.className='',3200)}
 function salir(){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.href='/'}
-function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-c').className=t=='c'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-cod').hidden=t!='c';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o';$('tb-cl').className=t=='cl'?'on':'';$('v-cl').hidden=t!='cl';$('tb-pr').className=t=='pr'?'on':'';$('v-pr').hidden=t!='pr';if(t=='c')retos();if(t=='o')cargaOps();if(t=='cl')clientes();if(t=='pr')pintaPrecios()}
+function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-c').className=t=='c'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-cod').hidden=t!='c';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o';$('tb-cl').className=t=='cl'?'on':'';$('v-cl').hidden=t!='cl';$('tb-pr').className=t=='pr'?'on':'';$('v-pr').hidden=t!='pr';$('tb-dc').className=t=='dc'?'on':'';$('v-dc').hidden=t!='dc';if(t=='c')retos();if(t=='o')cargaOps();if(t=='cl')clientes();if(t=='pr')pintaPrecios();if(t=='dc')cargaCodigos()}
 
 async function cargar(){try{const rc=D.recogidas,pp=D.precios;D=await A('listar');try{const [a,b]=await Promise.all([X('recogidas'),X('precios_listar')]);D.recogidas=a.recogidas;D.precios=b.precios}catch(e){D.recogidas=rc||{};D.precios=pp||{}}lista();ajustes()}catch(e){toast(e.message,1)}}
 function lista(){const q=$('busca').value.trim().toLowerCase(),qd=q.replace(/\D/g,'');
@@ -305,6 +328,22 @@ $('c_info').textContent=r.auto?'La API de WhatsApp está activa: los códigos se
 $('c_lista').innerHTML=r.retos.length?r.retos.map(x=>`<div class="dc"><span><b>${esc(x.nombre||'Cliente')}</b><small>Cel ${esc(x.telefono)} · pidió a las ${esc(x.hora)}</small></span><b style="font:600 24px Outfit;letter-spacing:.15em;color:var(--accd)">${esc(x.codigo)}</b><button class="btn s" onclick="envReto(${x.id},'${esc(x.telefono)}','${esc(x.codigo)}')">Enviar por WhatsApp</button><button class="btn o s" onclick="marcaReto(${x.id})">Ya lo envié</button></div>`).join(''):'<p class="hint">No hay códigos pendientes.</p>'}catch(e){}}
 async function envReto(id,tel,cod){window.open(`https://api.whatsapp.com/send/?phone=57${tel}&text=${encodeURIComponent('Tu código de acceso a ALENA es *'+cod+'*. Sirve por 1 hora. No lo compartas.')}`,'_blank');await marcaReto(id)}
 async function marcaReto(id){try{await A('reto_enviado',{id});retos()}catch(e){toast(e.message,1)}}
+/* ---- códigos de descuento ---- */
+let CODIGOS=[];
+async function cargaCodigos(){try{CODIGOS=(await X('codigos_listar')).codigos;pintaCodigos()}catch(e){toast(e.message,1)}}
+function pintaCodigos(){$('dc-lista').innerHTML=CODIGOS.length?CODIGOS.map(c=>`<div class="row" style="cursor:default"><div class="m"><b style="font-size:17px;letter-spacing:.1em;color:var(--accd)">${esc(c.codigo)}</b><small>${c.descripcion?esc(c.descripcion):'Sin descripción'} · Creado ${esc(c.creado)}</small></div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<b style="font-size:16px;color:var(--ok)">${cop(c.valor)}</b>
+<span class="tag ${c.activo?'on':''}">${c.activo?'Activo':'Inactivo'}</span>
+<button class="btn o s" onclick="toggleCodigo(${c.id},${!c.activo})">${c.activo?'Desactivar':'Activar'}</button>
+<button class="btn r s" onclick="borrarCodigo(${c.id})">Eliminar</button>
+</div></div>`).join(''):'<p class="hint">Aún no hay códigos de descuento. Crea el primero arriba.</p>'}
+async function crearCodigo(){const cod=($('dc_cod').value||'').trim().toUpperCase().replace(/\s/g,''),val=parseInt($('dc_val').value,10)||0,desc=$('dc_desc').value.trim();
+if(!cod)return toast('Escribe el texto del código.',1);if(!(val>0))return toast('Escribe un valor mayor a 0.',1);
+try{await X('codigo_crear',{codigo:cod,valor:val,activo:true,descripcion:desc});$('dc_cod').value='';$('dc_val').value='';$('dc_desc').value='';toast('Código creado ✓');await cargaCodigos()}catch(e){toast(e.message,1)}}
+async function toggleCodigo(id,activo){try{await X('codigo_editar',{id,activo,...CODIGOS.find(c=>c.id==id)});toast(activo?'Código activado ✓':'Código desactivado');await cargaCodigos()}catch(e){toast(e.message,1)}}
+async function borrarCodigo(id){if(!confirm('¿Eliminar este código?'))return;try{await X('codigo_eliminar',{id});toast('Código eliminado');await cargaCodigos()}catch(e){toast(e.message,1)}}
+
 setInterval(()=>{if(!document.hidden&&TOKEN)retos()},20000);
 if(TOKEN){cargar();retos()}
 </script>
