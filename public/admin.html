@@ -207,10 +207,27 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <!-- MIS PRECIOS -->
 <div id="v-pr" hidden>
 <div class="box"><h3 style="font-size:26px">Mis precios de descuento</h3>
-<p class="hint">🔒 Solo tú ves esta pantalla. Los clientes nunca ven estos precios ni el del catálogo: en su pedido solo aparece el valor final. Deja vacío el valor de las piezas que no tengan descuento. Al armar un pedido, activa «Usar mis precios de descuento» para que se apliquen.<br><b>El % que ves aquí es informativo</b>: se calcula comparando tu precio con el del catálogo, para que sepas cuánto estás bajando.</p>
+<p class="hint">🔒 Solo tú ves esta pantalla. Deja vacío el valor de las piezas que no tengan descuento. El % se calcula comparando tu precio con el del catálogo.<br>Marca con ✓ los ítems que quieres incluir en un código de descuento y toca <b>Crear código con seleccionados</b>.</p>
 <div class="tool" style="margin-top:12px"><input id="pr_q" placeholder="Buscar pieza…" oninput="filtraPrecios()"><input id="pr_pct" type="number" min="1" max="90" placeholder="% desc." style="max-width:110px;flex:none"><button class="btn o s" onclick="aplicaPct()">Llenar vacíos con ese %</button></div>
 <div id="pr-lista"></div>
-<div class="acts"><button class="btn" id="pr_save" onclick="guardaPrecios()">Guardar mis precios</button></div></div>
+<div class="acts">
+  <button class="btn" id="pr_save" onclick="guardaPrecios()">Guardar mis precios</button>
+  <button class="btn o" id="pr_cod_btn" onclick="abrirCrearCodigo()">＋ Crear código con seleccionados</button>
+</div>
+</div>
+<!-- Panel crear código desde mis precios -->
+<div id="pr-cod-panel" hidden style="background:var(--card);border:1px solid #efd3c4;border-radius:22px;padding:22px;margin-top:16px">
+<h3 style="font-size:22px;margin-bottom:4px">Nuevo código de descuento</h3>
+<p class="hint" id="pr-cod-items-txt"></p>
+<label>Código (texto libre, sin espacios)</label>
+<input id="pr_cod_txt" maxlength="40" placeholder="Ej: BODA2025" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')">
+<label>Descripción interna (opcional)</label>
+<input id="pr_cod_desc" maxlength="200" placeholder="Ej: Para boda de Sofía">
+<div class="acts">
+  <button class="btn" onclick="guardarCodigoDesdePrecios()">Crear código</button>
+  <button class="btn o" onclick="$('pr-cod-panel').hidden=true">Cancelar</button>
+</div>
+</div>
 </div>
 
 <!-- DESCUENTOS (códigos que el cliente puede canjear en el carrito) -->
@@ -307,12 +324,34 @@ ${(p.items||[]).length?`<small style="display:block;margin-top:4px">${p.items.ma
 $('cl-modal').hidden=false}
 function cierraCl(){$('cl-modal').hidden=true}
 
-/* ---- mis precios: columna % informativo ---- */
+/* ---- mis precios: columna % informativo + checkbox descuento ---- */
 function pintaPrecios(){const P=D.precios||{};
 $('pr-lista').innerHTML=CATALOGO.map((x,i)=>{const pDesc=P[x[0]]||'';const pct=pDesc&&x[1]>0?Math.round((1-pDesc/x[1])*100):null;
-return`<div class="dr" data-n="${esc(x[0])}" data-b="${esc(x[0].toLowerCase())}"><span>${esc(x[0])}</span><small>Catálogo ${cop(x[1])}</small><input type="number" min="0" step="500" data-i="${i}" value="${pDesc}" placeholder="Mi precio" oninput="actuPct(this,${i})"><span class="ks" id="pct${i}" style="min-width:52px;color:var(--ok);font-size:13px">${pct?'-'+pct+'%':''}</span></div>`}).join('');filtraPrecios()}
-function actuPct(inp,i){const v=parseInt(inp.value,10)||0,cat=CATALOGO[i][1];const s=document.getElementById('pct'+i);if(s)s.textContent=v>0&&cat>0?'-'+Math.round((1-v/cat)*100)+'%':'';}
-function filtraPrecios(){const nz=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),q=nz($('pr_q').value).split(/\s+/).filter(Boolean);
+return`<div class="dr" data-n="${esc(x[0])}" data-b="${esc(x[0].toLowerCase())}">
+<input type="checkbox" id="prck${i}" style="width:auto;margin:0" ${pDesc?'':'disabled'} title="Incluir en código de descuento">
+<span style="flex:1">${esc(x[0])}</span><small>Catálogo ${cop(x[1])}</small>
+<input type="number" min="0" step="500" data-i="${i}" value="${pDesc}" placeholder="Mi precio" oninput="actuPct(this,${i})">
+<span class="ks" id="pct${i}" style="min-width:52px;color:var(--ok);font-size:13px">${pct?'-'+pct+'%':''}</span>
+</div>`}).join('');filtraPrecios()}
+function actuPct(inp,i){const v=parseInt(inp.value,10)||0,cat=CATALOGO[i][1];const s=document.getElementById('pct'+i);if(s)s.textContent=v>0&&cat>0?'-'+Math.round((1-v/cat)*100)+'%':'';
+// habilitar/deshabilitar checkbox según si tiene precio
+const ck=document.getElementById('prck'+i);if(ck){ck.disabled=!v;if(!v)ck.checked=false;}}
+function abrirCrearCodigo(){
+const sel=[];CATALOGO.forEach((x,i)=>{const ck=document.getElementById('prck'+i);if(ck&&ck.checked&&!ck.disabled)sel.push(x[0]);});
+if(!sel.length)return toast('Marca al menos un ítem con ✓ (solo los que tienen precio de descuento se pueden marcar).',1);
+$('pr-cod-items-txt').textContent='Ítems incluidos: '+sel.join(', ');
+$('pr_cod_txt').value='';$('pr_cod_desc').value='';$('pr-cod-panel').hidden=false;
+$('pr-cod-panel').scrollIntoView({behavior:'smooth'});}
+async function guardarCodigoDesdePrecios(){
+const sel=[];CATALOGO.forEach((x,i)=>{const ck=document.getElementById('prck'+i);if(ck&&ck.checked&&!ck.disabled)sel.push(x[0]);});
+const cod=($('pr_cod_txt').value||'').trim().toUpperCase().replace(/\s/g,'');
+if(!cod)return toast('Escribe el texto del código.',1);
+if(!sel.length)return toast('No hay ítems seleccionados.',1);
+try{await X('codigo_crear',{codigo:cod,activo:true,descripcion:$('pr_cod_desc').value.trim(),items:sel});
+toast('Código '+cod+' creado ✓');$('pr-cod-panel').hidden=true;
+// desmarcar checkboxes
+CATALOGO.forEach((_,i)=>{const ck=document.getElementById('prck'+i);if(ck)ck.checked=false;})
+}catch(e){toast(e.message,1);}}function filtraPrecios(){const nz=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),q=nz($('pr_q').value).split(/\s+/).filter(Boolean);
 document.querySelectorAll('#pr-lista .dr').forEach(r=>{r.hidden=!q.every(w=>nz(r.dataset.n).includes(w))})}
 function aplicaPct(){const k=parseInt($('pr_pct').value,10);if(!(k>0&&k<=90))return toast('Escribe un % entre 1 y 90.',1);
 document.querySelectorAll('#pr-lista input').forEach(inp=>{if(!inp.value)inp.value=Math.round(CATALOGO[inp.dataset.i][1]*(100-k)/100/500)*500});toast('Listo. Revisa y toca «Guardar mis precios».')}
@@ -476,13 +515,19 @@ _telTimer=setTimeout(async()=>{try{const r=await X('buscar_contacto',{telefono:t
 /* ---- códigos de descuento ---- */
 let CODIGOS=[];
 async function cargaCodigos(){try{CODIGOS=(await X('codigos_listar')).codigos;pintaCodigos()}catch(e){toast(e.message,1)}}
-function pintaCodigos(){$('dc-lista').innerHTML=CODIGOS.length?CODIGOS.map(c=>`<div class="row" style="cursor:default"><div class="m"><b style="font-size:17px;letter-spacing:.1em;color:var(--accd)">${esc(c.codigo)}</b><small>${c.descripcion?esc(c.descripcion):'Sin descripción'} · Creado ${esc(c.creado)}</small></div>
+function pintaCodigos(){$('dc-lista').innerHTML=CODIGOS.length?CODIGOS.map(c=>{
+const ahorroEj=c.items&&c.items.length?c.items.map(n=>{const cat=CATALOGO.find(x=>x[0]==n);const desc=c.precios&&c.precios[n];return cat&&desc?cat[1]-desc:0;}).reduce((a,b)=>a+b,0):0;
+return`<div class="row" style="cursor:default"><div class="m">
+<b style="font-size:17px;letter-spacing:.1em;color:var(--accd)">${esc(c.codigo)}</b>
+<small>${c.descripcion?esc(c.descripcion):'Sin descripción'} · Creado ${esc(c.creado)}</small>
+${c.items&&c.items.length?`<small style="margin-top:4px;display:block">Ítems: ${c.items.map(n=>esc(n)).join(', ')}</small>`:''}
+${ahorroEj?`<small style="color:var(--ok);font-weight:500">Ahorro por ítem c/u: ${cop(ahorroEj)}</small>`:''}
+</div>
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-<b style="font-size:16px;color:var(--ok)">${cop(c.valor)}</b>
 <span class="tag ${c.activo?'on':''}">${c.activo?'Activo':'Inactivo'}</span>
 <button class="btn o s" onclick="toggleCodigo(${c.id},${!c.activo})">${c.activo?'Desactivar':'Activar'}</button>
 <button class="btn r s" onclick="borrarCodigo(${c.id})">Eliminar</button>
-</div></div>`).join(''):'<p class="hint">Aún no hay códigos de descuento. Crea el primero arriba.</p>'}
+</div></div>`}).join(''):'<p class="hint">Aún no hay códigos. Ve a «Mis precios», marca los ítems con ✓ y toca «Crear código con seleccionados».</p>'}
 async function crearCodigo(){const cod=($('dc_cod').value||'').trim().toUpperCase().replace(/\s/g,''),val=parseInt($('dc_val').value,10)||0,desc=$('dc_desc').value.trim();
 if(!cod)return toast('Escribe el texto del código.',1);if(!(val>0))return toast('Escribe un valor mayor a 0.',1);
 try{await X('codigo_crear',{codigo:cod,valor:val,activo:true,descripcion:desc});$('dc_cod').value='';$('dc_val').value='';$('dc_desc').value='';toast('Código creado ✓');await cargaCodigos()}catch(e){toast(e.message,1)}}

@@ -29,16 +29,22 @@ function esquemaExtra() {
       )`);
       // Precios de descuento privados del equipo (nunca se envían a clientes ni al público)
       await q(`CREATE TABLE IF NOT EXISTS precios_desc (nombre text PRIMARY KEY, precio int NOT NULL)`);
-      // Códigos de descuento: valor fijo en COP que el equipo crea y el cliente puede canjear en el carrito
+      // Códigos de descuento: el descuento se calcula por ítems habilitados (precio catálogo - mi precio)
       await q(`CREATE TABLE IF NOT EXISTS codigos_descuento (
         id serial PRIMARY KEY,
         codigo text NOT NULL UNIQUE,
-        valor int NOT NULL,
         activo boolean NOT NULL DEFAULT true,
         descripcion text,
         creado timestamptz NOT NULL DEFAULT now()
       )`);
-      // Contactos: personas que preguntaron pero no tienen pedido
+      // Ítems habilitados para descuento por código (relación código ↔ nombre de ítem)
+      await q(`CREATE TABLE IF NOT EXISTS codigo_items (
+        codigo_id int NOT NULL REFERENCES codigos_descuento(id) ON DELETE CASCADE,
+        nombre text NOT NULL,
+        PRIMARY KEY (codigo_id, nombre)
+      )`);
+      // Migración: si existe columna valor la dejamos (puede haber datos viejos)
+      await q(`ALTER TABLE codigos_descuento ADD COLUMN IF NOT EXISTS valor int`);
       await q(`CREATE TABLE IF NOT EXISTS contactos (
   id serial PRIMARY KEY,
   nombre text,
@@ -110,29 +116,39 @@ async function admin(b) {
     }
     // ---- Códigos de descuento ----
     case 'codigos_listar': {
-      const r = await q(`SELECT id, codigo, valor, activo, descripcion,
+      const r = await q(`SELECT id, codigo, activo, descripcion,
         to_char(creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS creado
         FROM codigos_descuento ORDER BY creado DESC`);
-      return json({ codigos: r });
+      // Cargar ítems de cada código
+      const items = await q(`SELECT codigo_id, nombre FROM codigo_items`);
+      const precios = await q(`SELECT nombre, precio FROM precios_desc`);
+      const preciosMap = Object.fromEntries(precios.map(x => [x.nombre, x.precio]));
+      return json({ codigos: r.map(c => ({
+        ...c,
+        items: items.filter(i => i.codigo_id === c.id).map(i => i.nombre),
+        precios: preciosMap,
+      }))});
     }
     case 'codigo_crear': {
       const cod = texto(b.codigo, 40);
-      const val = parseInt(b.valor, 10);
       if (!cod) return json({ error: 'El código no puede estar vacío.' }, 400);
-      if (!(val > 0)) return json({ error: 'El valor debe ser mayor a 0.' }, 400);
       const codUp = cod.toUpperCase().replace(/\s+/g, '');
-      await q(`INSERT INTO codigos_descuento (codigo, valor, activo, descripcion)
-               VALUES ($1, $2::int, $3::boolean, $4)`,
-        [codUp, val, b.activo !== false, texto(b.descripcion, 200) || null]);
+      const itemsLista = Array.isArray(b.items) ? b.items.slice(0, 200) : [];
+      if (!itemsLista.length) return json({ error: 'Selecciona al menos un ítem con descuento.' }, 400);
+      const r = await q(`INSERT INTO codigos_descuento (codigo, activo, descripcion)
+               VALUES ($1, $2::boolean, $3) RETURNING id`,
+        [codUp, b.activo !== false, texto(b.descripcion, 200) || null]);
+      const cid = r[0].id;
+      for (const nombre of itemsLista) {
+        await q(`INSERT INTO codigo_items (codigo_id, nombre) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [cid, String(nombre).trim().slice(0, 120)]);
+      }
       return json({ ok: true });
     }
     case 'codigo_editar': {
       const id = parseInt(b.id, 10);
-      const val = parseInt(b.valor, 10);
       if (!Number.isInteger(id)) return json({ error: 'ID no válido.' }, 400);
-      if (!(val > 0)) return json({ error: 'El valor debe ser mayor a 0.' }, 400);
-      await q(`UPDATE codigos_descuento SET valor = $2::int, activo = $3::boolean, descripcion = $4 WHERE id = $1::int`,
-        [id, val, b.activo !== false, texto(b.descripcion, 200) || null]);
+      await q(`UPDATE codigos_descuento SET activo = $2::boolean, descripcion = $3 WHERE id = $1::int`,
+        [id, b.activo !== false, texto(b.descripcion, 200) || null]);
       return json({ ok: true });
     }
     case 'codigo_eliminar': {
@@ -244,11 +260,14 @@ export default async (req) => {
     if (b.accion === 'codigo_validar') {
       const cod = String(b.codigo || '').trim().toUpperCase().replace(/\s+/g, '');
       if (!cod) return json({ error: 'Escribe un código.' }, 400);
-      const r = await q(`SELECT valor FROM codigos_descuento WHERE codigo = $1 AND activo`, [cod]);
+      const r = await q(`SELECT id FROM codigos_descuento WHERE codigo = $1 AND activo`, [cod]);
       if (!r.length) return json({ error: 'Código no válido o inactivo.' }, 400);
-      // Devolver también qué ítems tienen precio de descuento
-      const items = await q(`SELECT nombre FROM precios_desc`);
-      return json({ ok: true, valor: r[0].valor, items_con_descuento: items.map(x => x.nombre) });
+      // Devolver ítems habilitados y sus precios de descuento para calcular ahorro en el cliente
+      const items = await q(`SELECT ci.nombre, pd.precio AS precio_desc
+        FROM codigo_items ci
+        JOIN precios_desc pd ON pd.nombre = ci.nombre
+        WHERE ci.codigo_id = $1`, [r[0].id]);
+      return json({ ok: true, items: items.map(x => ({ nombre: x.nombre, precio_desc: x.precio_desc })) });
     }
     const t = verificar(tokenDe(req));
     if (!t) return json({ error: 'Sesión vencida. Vuelve a ingresar.' }, 401);
