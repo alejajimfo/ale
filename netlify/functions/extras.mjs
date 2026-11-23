@@ -25,6 +25,8 @@ function esquemaExtra() {
         creado timestamptz NOT NULL DEFAULT now(),
         actualizado timestamptz NOT NULL DEFAULT now()
       )`);
+      // Precios de descuento privados del equipo (nunca se envían a clientes ni al público)
+      await q(`CREATE TABLE IF NOT EXISTS precios_desc (nombre text PRIMARY KEY, precio int NOT NULL)`);
     })().catch((e) => { _listo = null; throw e; });
   }
   return _listo;
@@ -55,6 +57,21 @@ async function admin(b) {
       if (!Number.isInteger(id)) return json({ error: 'Pedido no válido.' }, 400);
       await q(`UPDATE pedidos SET recogida = $2, actualizado = now() WHERE id = $1::int`, [id, texto(b.texto, 300)]);
       return json({ ok: true });
+    }
+    case 'precios_listar': {
+      const r = await q(`SELECT nombre, precio FROM precios_desc`);
+      return json({ precios: Object.fromEntries(r.map((x) => [x.nombre, x.precio])) });
+    }
+    case 'precios_guardar': {
+      const src = b.precios && typeof b.precios === 'object' ? b.precios : {};
+      const lista = Object.entries(src).slice(0, 400)
+        .map(([n, p]) => ({ nombre: String(n).trim().slice(0, 120), precio: Math.max(0, Math.min(2000000000, parseInt(p, 10) || 0)) }))
+        .filter((x) => x.nombre && x.precio > 0);
+      const js = JSON.stringify(lista);
+      await q(`INSERT INTO precios_desc (nombre, precio) SELECT nombre, precio FROM jsonb_to_recordset($1::jsonb) AS x(nombre text, precio int)
+               ON CONFLICT (nombre) DO UPDATE SET precio = EXCLUDED.precio`, [js]);
+      await q(`DELETE FROM precios_desc WHERE nombre NOT IN (SELECT nombre FROM jsonb_to_recordset($1::jsonb) AS x(nombre text))`, [js]);
+      return json({ ok: true, total: lista.length });
     }
     case 'opiniones_listar': {
       const r = await q(`SELECT o.id, o.pedido_id, o.nombre, o.evento, o.estrellas, o.texto, o.aprobada,

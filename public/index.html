@@ -455,15 +455,13 @@ ${opinionHtml(p)}
 async function pdExtras(){try{const d=await api('/api/extras',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({accion:'mio'})});
 PX={rec:d.recogidas||{},op:d.opiniones||{}};if(!$('pd-res').hidden){const y=scrollY;pdVer();scrollTo(0,y)}}catch(e){}}
 function opinionHtml(p){if(p.modalidad!='alquiler'||p.paso<5)return'';const o=PX.op[p.id];
-if(o&&!ST['e'+p.id])return`<h4>Tu opinión</h4><div class="opx"><div class="st" style="color:#d4af37;font-size:22px">${estrellas(o.s)}</div><p style="font-style:italic">“${esc(o.t)}”</p>
-<div class="meta">${o.aprobada?'✓ Publicada en la sección de opiniones. ¡Gracias!':'Recibida. Aparecerá en el sitio cuando el equipo la apruebe.'}</div><button class="btn o" onclick="pdEditaOp(${p.id})">Editar mi opinión</button></div>`;
+if(o)return`<h4>Tu opinión</h4><div class="opx"><p style="font-size:17px">¡Gracias por tu opinión! 💛</p></div>`;
 const s=ST[p.id]||(o?o.s:0);
 return`<h4>Cuéntanos tu experiencia</h4><div class="opx"><div class="stp" id="stp${p.id}">${[1,2,3,4,5].map(n=>`<button type="button" class="${n<=s?'on':''}" onclick="pdStar(${p.id},${n})" aria-label="${n} estrellas">★</button>`).join('')}</div>
 <textarea id="opt${p.id}" rows="3" maxlength="600" placeholder="¿Cómo fue tu experiencia con ALENA?">${o?esc(o.t):''}</textarea>
 <div class="meta" id="ope${p.id}" style="color:var(--bad)"></div><button class="btn" id="opb${p.id}" onclick="pdOpinar(${p.id})">Enviar opinión</button>
-<div class="meta" style="margin-top:6px">Solo se publica si el equipo de ALENA la aprueba. Se mostrará tu nombre y la inicial de tu apellido.</div></div>`}
+<div class="meta" style="margin-top:6px">Se mostrará tu nombre y la inicial de tu apellido.</div></div>`}
 function pdStar(id,n){ST[id]=n;document.querySelectorAll('#stp'+id+' button').forEach((b,i)=>b.classList.toggle('on',i<n))}
-function pdEditaOp(id){ST['e'+id]=1;const y=scrollY;pdVer();scrollTo(0,y)}
 async function pdOpinar(id){const e=$('ope'+id),b=$('opb'+id),s=ST[id]||(PX.op[id]&&PX.op[id].s)||0;e.textContent='';
 if(!s){e.textContent='Elige de 1 a 5 estrellas.';return}b.disabled=true;b.textContent='Enviando…';
 try{await api('/api/extras',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({accion:'opinar',pedido_id:id,estrellas:s,texto:$('opt'+id).value})});
