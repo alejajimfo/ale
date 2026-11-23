@@ -209,6 +209,19 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <div class="box"><h3 style="font-size:26px">Mis precios de descuento</h3>
 <p class="hint">🔒 Solo tú ves esta pantalla. Deja vacío el valor de las piezas que no tengan descuento. El % se calcula comparando tu precio con el del catálogo.<br>Marca con ✓ los ítems que quieres incluir en un código de descuento y toca <b>Crear código con seleccionados</b>.</p>
 <div class="tool" style="margin-top:12px"><input id="pr_q" placeholder="Buscar pieza…" oninput="filtraPrecios()"><input id="pr_pct" type="number" min="1" max="90" placeholder="% desc." style="max-width:110px;flex:none"><button class="btn o s" onclick="aplicaPct()">Llenar vacíos con ese %</button></div>
+<div class="chips" style="margin:8px 0 4px">
+  <button type="button" onclick="selTodos(true)">✓ Seleccionar todos con descuento</button>
+  <button type="button" onclick="selTodos(false)">✗ Deseleccionar todos</button>
+  <button type="button" onclick="selCat(1)">Estructuras</button>
+  <button type="button" onclick="selCat(2)">Mobiliario</button>
+  <button type="button" onclick="selCat(3)">Postres</button>
+  <button type="button" onclick="selCat(4)">Iluminación</button>
+  <button type="button" onclick="selCat(5)">Telas</button>
+  <button type="button" onclick="selCat(6)">Neones</button>
+  <button type="button" onclick="selCat(7)">Números</button>
+  <button type="button" onclick="selCat(8)">Alfombras</button>
+  <button type="button" onclick="selCat(9)">Personajes</button>
+</div>
 <div id="pr-lista"></div>
 <div class="acts">
   <button class="btn" id="pr_save" onclick="guardaPrecios()">Guardar mis precios</button>
@@ -336,6 +349,8 @@ return`<div class="dr" data-n="${esc(x[0])}" data-b="${esc(x[0].toLowerCase())}"
 function actuPct(inp,i){const v=parseInt(inp.value,10)||0,cat=CATALOGO[i][1];const s=document.getElementById('pct'+i);if(s)s.textContent=v>0&&cat>0?'-'+Math.round((1-v/cat)*100)+'%':'';
 // habilitar/deshabilitar checkbox según si tiene precio
 const ck=document.getElementById('prck'+i);if(ck){ck.disabled=!v;if(!v)ck.checked=false;}}
+function selTodos(marcar){CATALOGO.forEach((_,i)=>{const ck=document.getElementById('prck'+i);if(ck&&!ck.disabled)ck.checked=marcar;})}
+function selCat(cat){CATALOGO.forEach((x,i)=>{if(x[2]!==cat)return;const ck=document.getElementById('prck'+i);if(ck&&!ck.disabled)ck.checked=true;})}
 function abrirCrearCodigo(){
 const sel=[];CATALOGO.forEach((x,i)=>{const ck=document.getElementById('prck'+i);if(ck&&ck.checked&&!ck.disabled)sel.push(x[0]);});
 if(!sel.length)return toast('Marca al menos un ítem con ✓ (solo los que tienen precio de descuento se pueden marcar).',1);

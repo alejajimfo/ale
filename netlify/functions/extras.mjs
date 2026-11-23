@@ -23,7 +23,7 @@ function esquemaExtra() {
         evento text,
         estrellas int NOT NULL,
         texto text NOT NULL,
-        aprobada boolean NOT NULL DEFAULT false,
+        estado text NOT NULL DEFAULT 'pendiente',
         creado timestamptz NOT NULL DEFAULT now(),
         actualizado timestamptz NOT NULL DEFAULT now()
       )`);
@@ -69,7 +69,7 @@ function nombrePublico(n) {
 }
 
 async function publicas() {
-  const r = await q(`SELECT nombre, evento, estrellas, texto FROM opiniones WHERE aprobada ORDER BY actualizado DESC LIMIT 60`);
+  const r = await q(`SELECT nombre, evento, estrellas, texto FROM opiniones WHERE estado='aprobada' ORDER BY actualizado DESC LIMIT 60`);
   return json({ opiniones: r.map((o) => ({ n: o.nombre, e: o.evento, s: o.estrellas, t: o.texto })) }, 200, { 'cache-control': 'public, max-age=60' });
 }
 
@@ -101,13 +101,13 @@ async function admin(b) {
       return json({ ok: true, total: lista.length });
     }
     case 'opiniones_listar': {
-      const r = await q(`SELECT o.id, o.pedido_id, o.nombre, o.evento, o.estrellas, o.texto, o.aprobada,
+      const r = await q(`SELECT o.id, o.pedido_id, o.nombre, o.evento, o.estrellas, o.texto, o.estado,
         to_char(o.actualizado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS fecha, p.nombre AS cliente
-        FROM opiniones o JOIN pedidos p ON p.id = o.pedido_id ORDER BY o.aprobada, o.actualizado DESC`);
-      return json({ opiniones: r });
+        FROM opiniones o JOIN pedidos p ON p.id = o.pedido_id ORDER BY (o.estado='pendiente') DESC, o.actualizado DESC`);
+      return json({ opiniones: r.map(o=>({...o, aprobada: o.estado==='aprobada'})) });
     }
     case 'opinion_estado': {
-      await q(`UPDATE opiniones SET aprobada = $2::boolean WHERE id = $1::int`, [parseInt(b.id, 10), b.aprobada === true]);
+      await q(`UPDATE opiniones SET estado = $2 WHERE id = $1::int`, [parseInt(b.id, 10), b.aprobada ? 'aprobada' : 'rechazada']);
       return json({ ok: true });
     }
     case 'opinion_eliminar': {
@@ -223,10 +223,10 @@ async function cliente(t, b) {
   if (!lista) return json({ error: 'Tu acceso venció. Ingresa de nuevo.' }, 401);
   if (b.accion === 'mio') {
     const rec = await q(`SELECT id, recogida FROM pedidos WHERE visible AND recogida IS NOT NULL AND id = ANY(string_to_array($1, ',')::int[])`, [lista]);
-    const op = await q(`SELECT pedido_id, estrellas, texto, aprobada FROM opiniones WHERE pedido_id = ANY(string_to_array($1, ',')::int[])`, [lista]);
+    const op = await q(`SELECT pedido_id, estrellas, texto, estado FROM opiniones WHERE pedido_id = ANY(string_to_array($1, ',')::int[])`, [lista]);
     return json({
       recogidas: Object.fromEntries(rec.map((x) => [x.id, x.recogida])),
-      opiniones: Object.fromEntries(op.map((o) => [o.pedido_id, { s: o.estrellas, t: o.texto, aprobada: o.aprobada }])),
+      opiniones: Object.fromEntries(op.map((o) => [o.pedido_id, { s: o.estrellas, t: o.texto, aprobada: o.estado==='aprobada' }])),
     });
   }
   if (b.accion === 'opinar') {
@@ -240,10 +240,10 @@ async function cliente(t, b) {
     if (!p || p.modalidad !== 'alquiler') return json({ error: 'Pedido no válido.' }, 400);
     if (p.paso < PASO_MIN_OPINION) return json({ error: 'Podrás opinar cuando tu evento ya esté en marcha o terminado.' }, 400);
     // Al crear o editar, vuelve a quedar pendiente de aprobación.
-    await q(`INSERT INTO opiniones (pedido_id, nombre, evento, estrellas, texto, aprobada)
-             VALUES ($1::int, $2, $3, $4::int, $5, false)
+    await q(`INSERT INTO opiniones (pedido_id, nombre, evento, estrellas, texto, estado)
+             VALUES ($1::int, $2, $3, $4::int, $5, 'pendiente')
              ON CONFLICT (pedido_id) DO UPDATE SET estrellas = EXCLUDED.estrellas, texto = EXCLUDED.texto,
-               nombre = EXCLUDED.nombre, evento = EXCLUDED.evento, aprobada = false, actualizado = now()`,
+               nombre = EXCLUDED.nombre, evento = EXCLUDED.evento, estado = 'pendiente', actualizado = now()`,
       [id, nombrePublico(p.nombre), texto(p.tipo_evento, 120), s, t2]);
     return json({ ok: true });
   }
