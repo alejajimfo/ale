@@ -1,5 +1,5 @@
 // POST /api/admin  {accion, ...}  (Authorization: Bearer <token de admin>)
-import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, pin4 } from '../lib/util.mjs';
+import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, pin5, LARGO_PIN } from '../lib/util.mjs';
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -20,12 +20,25 @@ function normalizarIG(v) {
   return m ? `${m[1].toLowerCase()}/${m[2]}` : null;
 }
 
+// Código del cliente: si ya tiene otro pedido (misma cédula o celular) se reutiliza su código; si no, se crea uno nuevo.
+async function pinParaCliente(cedula, telefono) {
+  if (cedula || telefono) {
+    const r = await q(`SELECT pin FROM pedidos WHERE length(pin) = $3::int AND ((cedula IS NOT NULL AND cedula = $1) OR (telefono IS NOT NULL AND telefono = $2)) ORDER BY id LIMIT 1`,
+      [cedula || '', telefono || '', LARGO_PIN]);
+    if (r.length) return r[0].pin;
+  }
+  return pin5();
+}
 async function asegurarPin(id) {
-  await q(`UPDATE pedidos SET pin = $2 WHERE id = $1 AND pin IS NULL`, [id, pin4()]);
+  const p = (await q(`SELECT cedula, telefono FROM pedidos WHERE id = $1::int`, [id]))[0];
+  if (!p) return;
+  await q(`UPDATE pedidos SET pin = $2 WHERE id = $1::int AND pin IS NULL`, [id, await pinParaCliente(p.cedula, p.telefono)]);
 }
 
 async function listar() {
-  for (const r of await q(`SELECT id FROM pedidos WHERE pin IS NULL`)) await asegurarPin(r.id);
+  // Desde el 18 de nov. los códigos son de 5 números: los antiguos (4 números) se reemplazan.
+  await q(`UPDATE pedidos SET pin = NULL WHERE pin IS NOT NULL AND length(pin) <> $1::int`, [LARGO_PIN]);
+  for (const r of await q(`SELECT id FROM pedidos WHERE pin IS NULL ORDER BY id`)) await asegurarPin(r.id);
   const pedidos = await q(`SELECT ${COLS_PEDIDO}, to_char(actualizado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS actualizado FROM pedidos ORDER BY id DESC`);
   const docs = await q(`SELECT id, pedido_id, nombre, tipo, categoria, publico, tam FROM documentos ORDER BY id`);
   return {
@@ -70,7 +83,7 @@ async function guardar(b) {
   } else {
     id = (await q(`INSERT INTO pedidos (nombre, cedula, telefono, modalidad, tipo_evento, fecha_evento, lugar, paso, historial,
              mensaje, detalle, total, abonado, deposito, notas_internas, visible, items, recogida, pin)
-             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb,$18,$19) RETURNING id`, [...vals, pin4()]))[0].id;
+             VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb,$18,$19) RETURNING id`, [...vals, await pinParaCliente(cedula, telefono)]))[0].id;
   }
   await asegurarPin(id);
   return json({ ok: true, id, ref: refDe(id) });
@@ -115,8 +128,13 @@ export default async (req) => {
       case 'nuevo_pin': {
         const id = parseInt(b.id, 10);
         if (!Number.isInteger(id)) return json({ error: 'Pedido no válido.' }, 400);
-        const r = await q(`UPDATE pedidos SET pin = $2 WHERE id = $1::int RETURNING pin`, [id, pin4()]);
-        return r.length ? json({ ok: true, pin: r[0].pin }) : json({ error: 'Pedido no encontrado.' }, 404);
+        const ped = (await q(`SELECT cedula, telefono FROM pedidos WHERE id = $1::int`, [id]))[0];
+        if (!ped) return json({ error: 'Pedido no encontrado.' }, 404);
+        const nuevo = pin5();
+        // El código es por cliente: se cambia en todos sus pedidos (misma cédula o celular)
+        await q(`UPDATE pedidos SET pin = $2 WHERE id = $1::int OR (cedula IS NOT NULL AND cedula = $3) OR (telefono IS NOT NULL AND telefono = $4)`,
+          [id, nuevo, ped.cedula || '', ped.telefono || '']);
+        return json({ ok: true, pin: nuevo });
       }
       case 'ajustes': {
         if (typeof b.portal === 'boolean') await setAjuste('portal', b.portal);

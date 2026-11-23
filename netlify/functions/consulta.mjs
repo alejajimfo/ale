@@ -1,6 +1,6 @@
 // POST /api/consulta {dato, pin}  -> cédula o celular + PIN del pedido; devuelve los pedidos (acceso por 24 h)
 // GET  /api/consulta (Bearer)     -> vuelve a cargar los pedidos mientras el acceso siga vigente
-import { COLS_PEDIDO, HORAS_SESION, anotar, ensureSchema, fallo, firmar, getAjustes, igual, ipDe, json, limitado, paraCliente, q, soloDigitos, tokenDe, verificar } from '../lib/util.mjs';
+import { COLS_PEDIDO, HORAS_SESION, LARGO_PIN, anotar, ensureSchema, fallo, firmar, getAjustes, igual, ipDe, json, limitado, paraCliente, q, soloDigitos, tokenDe, verificar } from '../lib/util.mjs';
 
 async function cargar(ids) {
   const pedidos = await q(`SELECT ${COLS_PEDIDO} FROM pedidos WHERE visible AND id = ANY(string_to_array($1, ',')::int[])
@@ -29,9 +29,9 @@ export default async (req, ctx) => {
     const body = await req.json().catch(() => ({}));
     const d = soloDigitos(body.dato);
     const pin = String(body.pin ?? '').replace(/\D/g, '');
-    if (d.length < 6 || d.length > 12 || pin.length !== 4) return json({ error: 'Escribe tu cédula o celular y el PIN de 4 números.' }, 400);
+    if (d.length < 6 || d.length > 12 || pin.length !== LARGO_PIN) return json({ error: `Escribe tu cédula o celular y tu código de ${LARGO_PIN} números.` }, 400);
 
-    // Límites: por IP y por cliente (el PIN tiene solo 4 números, así que se bloquea tras 5 fallos)
+    // Límites: por IP y por cliente (el código tiene solo 5 números, así que se bloquea tras 5 fallos)
     const ip = ipDe(req, ctx), llave = 'cliente:' + d;
     if (await limitado(ip, 'pin', 10, 10) || await limitado(llave, 'pin', 5, 30)) {
       return json({ error: 'Demasiados intentos. Espera 30 minutos o escríbenos por WhatsApp.' }, 429);
@@ -41,7 +41,7 @@ export default async (req, ctx) => {
     const ok = filas.filter((r) => r.pin && igual(r.pin, pin));
     if (!ok.length) {
       await anotar(ip, 'pin'); await anotar(llave, 'pin');
-      return json({ error: 'Los datos o el PIN no coinciden. Revísalos o escríbenos por WhatsApp.' }, 401);
+      return json({ error: 'Los datos o el código no coinciden. Revísalos o escríbenos por WhatsApp.' }, 401);
     }
 
     const ids = ok.map((r) => r.id);

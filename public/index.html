@@ -112,6 +112,7 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 .addbar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140px);z-index:35;background:var(--tx);color:#fff;border-radius:30px;padding:8px 8px 8px 20px;display:flex;gap:14px;align-items:center;font-size:14px;transition:.3s;max-width:calc(100% - 100px);box-shadow:0 8px 24px rgba(0,0,0,.25)}.addbar.on{transform:translate(-50%,0)}.addbar button{background:var(--acc);color:#fff;border:0;border-radius:24px;padding:8px 16px;font:500 13px Outfit;cursor:pointer;white-space:nowrap}
 .linkb{background:none;border:0;color:var(--accd);text-decoration:underline;font:400 13px Outfit;cursor:pointer;margin-top:12px}
 .its{padding-left:24px;margin-top:6px;font-size:15px}.its li{padding:7px 0;border-bottom:1px solid #efd3c4}.its li:last-child{border:0}.its li b{float:right;font-weight:500;margin-left:12px}
+.avc{background:#fff3e6;border:1px dashed var(--acc,#c9744f);border-radius:12px;padding:10px 12px;margin:10px 0 12px;font-size:14px;font-style:normal;text-align:left}.avc a{font-size:13px;color:var(--accd,#a85a3a);text-decoration:underline;display:inline-block;margin-top:4px}
 </style>
 </head>
 <body>
@@ -214,13 +215,11 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 
 <div class="op-card pdbox" id="pd-code" hidden>
 <h3>Ingresar con código</h3>
-<form id="pd-f1" onsubmit="return pdPedir(event)"><p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Escribe tu cédula o tu celular y te enviamos un código de 4 números por WhatsApp.</p>
-<label for="pd_d">Cédula o celular</label><input id="pd_d" inputmode="numeric" autocomplete="off" placeholder="Solo números">
-<div class="err" id="pd_e1" role="alert"></div><button class="btn" id="pd_go1">Enviarme el código</button></form>
-<form id="pd-f2" hidden onsubmit="return pdConsultar(event)"><p id="pd_msg" style="font-style:normal;color:var(--mu);font-size:14px;margin:0"></p>
-<label for="pd_c">Código de 4 números</label><input id="pd_c" inputmode="numeric" maxlength="4" autocomplete="one-time-code" placeholder="••••" style="font-size:28px;letter-spacing:.5em;text-align:center">
-<div class="err" id="pd_e" role="alert"></div><button class="btn" id="pd_go">Ver mi pedido</button>
-<p style="text-align:center"><button type="button" class="linkb" onclick="pdAtras()">Cambiar datos o pedir otro código</button></p></form></div>
+<div class="avc" role="note"><b>Recuerda:</b> desde el 18 de noviembre los códigos se actualizaron. Ahora tu código es de 5 números y te lo entregamos al crear tu pedido. Si no lo tienes, solicítalo por WhatsApp.<br><a target="_blank" rel="noopener" href="https://api.whatsapp.com/send/?phone=573143425264&text=Hola+ALENA%2C+quiero+solicitar+mi+nuevo+c%C3%B3digo+para+ver+mi+pedido.+Mi+nombre+es%3A+">Solicitar mi nuevo código</a></div>
+<p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Escribe tu cédula o celular y tu código de 5 números.</p>
+<form id="pd-f2" onsubmit="return pdConsultar(event)"><label for="pd_d">Cédula o celular</label><input id="pd_d" inputmode="numeric" autocomplete="off" placeholder="Solo números">
+<label for="pd_c">Código de 5 números</label><input id="pd_c" type="password" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="•••••" style="font-size:24px;letter-spacing:.4em;text-align:center">
+<div class="err" id="pd_e" role="alert"></div><button class="btn" id="pd_go">Ver mi pedido</button></form></div>
 
 <div class="op-card pdbox" id="pd-admin" hidden>
 <h3>Inicia sesión</h3><p style="font-style:normal;color:var(--mu);font-size:14px;margin:0">Acceso exclusivo del equipo ALENA.</p>
@@ -432,20 +431,14 @@ let d={};try{d=await r.json()}catch(e){}if(!r.ok)throw new Error(d.error||'No se
 function fmtF(s){if(!s)return'';const[y,m,d]=s.slice(0,10).split('-');return`${d}/${m}/${y}`}
 function fmtI(iso){const d=new Date(iso);return isNaN(d)?'':d.toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'})}
 function pintarPedido(){const b=$('pd-b1');b.disabled=!PORTAL;
-$('pd-sub').textContent=PORTAL?'Ingresa con tu cédula o celular; te enviaremos un código por WhatsApp para ver el estado de tu alquiler o decoración, tu cotización y tus documentos.':'Pronto podrás consultar aquí el estado de tu alquiler o decoración, tu cotización y tus documentos.';
+$('pd-sub').textContent=PORTAL?'Ingresa con tu cédula o celular; usa el código de 5 números que te entregamos al crear tu pedido para ver el estado de tu alquiler o decoración, tu cotización y tus documentos.':'Pronto podrás consultar aquí el estado de tu alquiler o decoración, tu cotización y tus documentos.';
 b.textContent=PORTAL?'Ingresar con código':'Ingresar con código (próximamente)';if(!PORTAL&&!$('pd-code').hidden)pdModo('')}
-function pdModo(m){$('pd-code').hidden=m!='code'||!PORTAL;$('pd-admin').hidden=m!='admin';$('pd-res').hidden=true;$('pd-ch').hidden=false;if(m=='code')pdAtras();
+function pdModo(m){$('pd-code').hidden=m!='code'||!PORTAL;$('pd-admin').hidden=m!='admin';$('pd-res').hidden=true;$('pd-ch').hidden=false;if(m=='code'){$('pd_c').value='';$('pd_e').textContent=''}
 const f=m=='code'?'pd_d':m=='admin'?'pa_e':null;if(f&&!$(f).closest('[hidden]'))setTimeout(()=>$(f).focus(),50)}
-const JH={'content-type':'application/json'};let PD_DATO='';
-async function pdPedir(ev){ev.preventDefault();const e=$('pd_e1'),b=$('pd_go1');e.textContent='';PD_DATO=$('pd_d').value;b.disabled=true;b.textContent='Enviando…';
-try{const d=await api('/api/codigo',{method:'POST',headers:JH,body:JSON.stringify({dato:PD_DATO})});
-$('pd-f1').hidden=true;$('pd-f2').hidden=false;$('pd_c').value='';$('pd_e').textContent='';
-$('pd_msg').textContent=d.auto?'Si los datos coinciden con un pedido, te enviamos un código de 4 números a tu WhatsApp. Escríbelo aquí.':'Recibimos tu solicitud. Si los datos coinciden con un pedido, te enviaremos el código por WhatsApp en unos minutos (en horario de atención). Escríbelo aquí cuando lo recibas.';
-setTimeout(()=>$('pd_c').focus(),50)}catch(x){e.textContent=x.message}finally{b.disabled=false;b.textContent='Enviarme el código'}return false}
-function pdAtras(){$('pd-f1').hidden=false;$('pd-f2').hidden=true;$('pd_c').value='';$('pd_e').textContent='';$('pd_e1').textContent=''}
+const JH={'content-type':'application/json'};
 async function pdConsultar(ev){ev.preventDefault();const e=$('pd_e'),b=$('pd_go');e.textContent='';b.disabled=true;b.textContent='Verificando…';
-try{const d=await api('/api/consulta',{method:'POST',headers:JH,body:JSON.stringify({dato:PD_DATO,codigo:$('pd_c').value})});
-TOK=d.token;PD=d.pedidos;PX={rec:{},op:{}};try{localStorage.setItem('alena_sesion',JSON.stringify({t:d.token,exp:d.exp}))}catch(x){}$('pd_d').value='';pdVer();pdExtras()}catch(x){e.textContent=x.message}finally{b.disabled=false;b.textContent='Ver mi pedido'}return false}
+try{const d=await api('/api/consulta',{method:'POST',headers:JH,body:JSON.stringify({dato:$('pd_d').value,pin:$('pd_c').value})});
+TOK=d.token;PD=d.pedidos;PX={rec:{},op:{}};try{localStorage.setItem('alena_sesion',JSON.stringify({t:d.token,exp:d.exp}))}catch(x){}$('pd_d').value='';$('pd_c').value='';pdVer();pdExtras()}catch(x){e.textContent=x.message}finally{b.disabled=false;b.textContent='Ver mi pedido'}return false}
 function pdSalir(){TOK='';PD=[];PX={rec:{},op:{}};try{localStorage.removeItem('alena_sesion')}catch(x){}$('pd-res').hidden=true;$('pd-res').innerHTML='';$('pd-ch').hidden=false;$('pd-wa').hidden=false;pdModo('code')}
 async function pdRestaurar(){let g;try{g=JSON.parse(localStorage.getItem('alena_sesion')||'null')}catch(x){}
 if(!g||!g.t||g.exp<Date.now()){try{localStorage.removeItem('alena_sesion')}catch(x){}return}

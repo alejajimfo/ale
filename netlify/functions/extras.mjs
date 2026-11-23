@@ -45,6 +45,19 @@ function esquemaExtra() {
       )`);
       // Migración: si existe columna valor la dejamos (puede haber datos viejos)
       await q(`ALTER TABLE codigos_descuento ADD COLUMN IF NOT EXISTS valor int`);
+      // Migración: quitar NOT NULL de valor si existe (tabla vieja tenía valor NOT NULL)
+      await q(`ALTER TABLE codigos_descuento ALTER COLUMN valor DROP NOT NULL`);
+      // Migración: agregar tabla codigo_items si no existe
+      await q(`CREATE TABLE IF NOT EXISTS codigo_items (
+        codigo_id int NOT NULL REFERENCES codigos_descuento(id) ON DELETE CASCADE,
+        nombre text NOT NULL,
+        PRIMARY KEY (codigo_id, nombre)
+      )`);
+      // La tabla opiniones ya la crea util.mjs (sin «evento» ni «actualizado»): se completan sus columnas.
+      // (No usar CREATE TABLE IF NOT EXISTS aquí: si la tabla ya existe, no agrega columnas.)
+      await q(`ALTER TABLE opiniones ADD COLUMN IF NOT EXISTS evento text`);
+      await q(`ALTER TABLE opiniones ADD COLUMN IF NOT EXISTS actualizado timestamptz NOT NULL DEFAULT now()`);
+      await q(`ALTER TABLE opiniones ADD COLUMN IF NOT EXISTS estado text NOT NULL DEFAULT 'pendiente'`);
       await q(`CREATE TABLE IF NOT EXISTS contactos (
   id serial PRIMARY KEY,
   nombre text,
@@ -102,8 +115,8 @@ async function admin(b) {
     }
     case 'opiniones_listar': {
       const r = await q(`SELECT o.id, o.pedido_id, o.nombre, o.evento, o.estrellas, o.texto, o.estado,
-        to_char(o.actualizado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS fecha, p.nombre AS cliente
-        FROM opiniones o JOIN pedidos p ON p.id = o.pedido_id ORDER BY (o.estado='pendiente') DESC, o.actualizado DESC`);
+        to_char(o.actualizado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD HH24:MI') AS fecha, COALESCE(p.nombre, o.nombre) AS cliente
+        FROM opiniones o LEFT JOIN pedidos p ON p.id = o.pedido_id ORDER BY (o.estado='pendiente') DESC, o.actualizado DESC`);
       return json({ opiniones: r.map(o=>({...o, aprobada: o.estado==='aprobada'})) });
     }
     case 'opinion_estado': {
@@ -242,7 +255,7 @@ async function cliente(t, b) {
     // Al crear o editar, vuelve a quedar pendiente de aprobación.
     await q(`INSERT INTO opiniones (pedido_id, nombre, evento, estrellas, texto, estado)
              VALUES ($1::int, $2, $3, $4::int, $5, 'pendiente')
-             ON CONFLICT (pedido_id) DO UPDATE SET estrellas = EXCLUDED.estrellas, texto = EXCLUDED.texto,
+             ON CONFLICT (pedido_id) WHERE pedido_id IS NOT NULL DO UPDATE SET estrellas = EXCLUDED.estrellas, texto = EXCLUDED.texto,
                nombre = EXCLUDED.nombre, evento = EXCLUDED.evento, estado = 'pendiente', actualizado = now()`,
       [id, nombrePublico(p.nombre), texto(p.tipo_evento, 120), s, t2]);
     return json({ ok: true });
@@ -251,7 +264,9 @@ async function cliente(t, b) {
 }
 
 export default async (req) => {
+  let esAdmin = false;
   try {
+    esAdmin = (verificar(tokenDe(req)) || {}).rol === 'admin';
     await esquemaExtra();
     if (req.method === 'GET') return await publicas();
     if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405);
@@ -274,7 +289,12 @@ export default async (req) => {
     if (t.rol === 'admin') return await admin(b);
     if (t.rol === 'cliente') return await cliente(t, b);
     return json({ error: 'No autorizado.' }, 401);
-  } catch (e) { return fallo(e); }
+  } catch (e) {
+    console.error('[extras]', e);
+    // Al equipo se le muestra el motivo real; al público no.
+    if (esAdmin) return json({ error: `Error del servidor: ${String((e && e.message) || e).slice(0, 300)}` }, 500);
+    return fallo(e);
+  }
 };
 
 export const config = { path: '/api/extras' };

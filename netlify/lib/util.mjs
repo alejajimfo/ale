@@ -166,15 +166,18 @@ export function soloDigitos(v) {
 }
 export const refDe = (id) => 'AL-' + String(id).padStart(4, '0');
 
-/* ---------- PIN personal del pedido (se envía una vez por WhatsApp) ---------- */
+/* ---------- Código personal del cliente (5 números) ---------- */
+// Se entrega al cliente al crear su pedido. Un mismo cliente (misma cédula o celular) usa siempre el mismo código.
 export const HORAS_SESION = 24; // horas que dura el acceso del cliente tras ingresar
-const DEBILES = new Set(['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234', '4321', '0123', '3210', '1212', '2580']);
-export function pin4() {
+export const LARGO_PIN = 5;
+const DEBILES = new Set(['00000', '11111', '22222', '33333', '44444', '55555', '66666', '77777', '88888', '99999', '12345', '54321', '01234', '43210', '10000', '20000']);
+export function pin5() {
   for (;;) {
-    const p = String(crypto.randomInt(10000)).padStart(4, '0');
+    const p = String(crypto.randomInt(100000)).padStart(LARGO_PIN, '0');
     if (!DEBILES.has(p)) return p;
   }
 }
+export const pin4 = pin5; // compatibilidad con código antiguo
 
 /* ---------- Pedido -> objeto JSON ---------- */
 export const COLS_PEDIDO = `id, items, pin, nombre, cedula, telefono, modalidad, tipo_evento,
