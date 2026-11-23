@@ -44,6 +44,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 .ped{background:#fff;border-radius:16px;padding:14px;margin-top:12px}.ped .tg{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ped small{color:var(--mu)}
 .dr{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f5e3d8;font-size:14px;flex-wrap:wrap}.dr span{flex:1;min-width:180px}.dr small{color:var(--mu);margin-right:8px}.dr input{width:130px;padding:6px 8px}
 .qt{display:flex;align-items:center;gap:6px}.qt button{width:26px;height:26px;border-radius:50%;border:1px solid var(--acc);background:#fff;color:var(--accd);cursor:pointer}
+#ct-modal{position:fixed;inset:0;background:rgba(74,63,59,.55);z-index:40;display:flex;align-items:center;justify-content:center;padding:14px}
 </style>
 </head>
 <body>
@@ -65,7 +66,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 <div class="g2">
 <div><label>Nombre del cliente *</label><input id="e_nombre" maxlength="120"></div>
 <div><label>Cédula</label><input id="e_cedula" inputmode="numeric" placeholder="Solo números"></div>
-<div><label>Celular (aquí le llega el código por WhatsApp)</label><input id="e_tel" inputmode="numeric" placeholder="3001234567"></div>
+<div><label>Celular (aquí le llega el código por WhatsApp)</label><input id="e_tel" inputmode="numeric" placeholder="3001234567" oninput="buscarPorTel(this.value)"></div>
 <div><label>Modalidad</label><select id="e_mod" onchange="E.modalidad=this.value;pintaPasos();$('e_recw').hidden=E.modalidad!='alquiler'"><option value="alquiler">Alquiler simple</option><option value="decoracion">Decoración con montaje</option></select></div>
 <div><label>Tipo de evento</label><input id="e_tipo" maxlength="120" placeholder="Bautizo, quince años…"></div>
 <div><label>Fecha del evento</label><input id="e_fecha" type="date"></div>
@@ -121,11 +122,54 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 
 <!-- CLIENTES -->
 <div id="v-cl" hidden>
-<div class="tool"><input id="cl_q" placeholder="Buscar cliente por nombre, cédula o celular…" oninput="clientes()"><button class="btn" onclick="nuevo();tab('p')">＋ Nuevo pedido</button></div>
+<div class="tabs" style="margin-bottom:14px">
+  <button id="tb-cl-p" class="on" onclick="subTabCl('p')">Con pedido</button>
+  <button id="tb-cl-c" onclick="subTabCl('c')">Contactos</button>
+</div>
+
+<!-- Sub: clientes con pedido -->
+<div id="v-cl-p">
+<div class="tool"><input id="cl_q" placeholder="Buscar por nombre, cédula o celular…" oninput="clientes()"><button class="btn" onclick="nuevo();tab('p')">＋ Nuevo pedido</button></div>
 <div class="leg"><span class="ct azul">Alquiler</span><span class="ct verde">Decoración</span><span class="ct naranja">Pago pendiente</span><span class="ct rojo">Finalizado</span></div>
 <div id="cl-lista"></div>
 </div>
+
+<!-- Sub: contactos (solo preguntaron) -->
+<div id="v-cl-c" hidden>
+<div class="tool">
+  <input id="ct_q" placeholder="Buscar contacto…" oninput="filtrarContactos()">
+  <button class="btn" onclick="abrirNuevoContacto()">＋ Nuevo contacto</button>
+  <button class="btn o" onclick="$('ct-import-box').hidden=!$('ct-import-box').hidden">↑ Importar Excel</button>
+</div>
+<div id="ct-import-box" hidden style="background:var(--card);border:1px solid #efd3c4;border-radius:16px;padding:16px;margin-bottom:14px">
+  <b style="font-size:14px">Importar desde Excel</b>
+  <p class="hint" style="margin:6px 0 10px">Pega aquí los datos copiados de tu Excel (columnas: Nombre · Teléfono · Etiqueta). Una fila por línea, columnas separadas por tabulación. Los que ya existen por teléfono no se duplican.</p>
+  <textarea id="ct_import_txt" rows="6" placeholder="Juan Pérez&#9;3101234567&#9;Cumpleaños&#10;María García&#9;3209876543&#9;Baby Shower"></textarea>
+  <div class="acts" style="margin-top:10px"><button class="btn" onclick="importarContactos()">Importar</button></div>
+</div>
+<div id="ct-lista"></div>
+</div>
+</div>
 <div id="cl-modal" hidden onclick="if(event.target==this)cierraCl()"><div class="box" id="cl-det"></div></div>
+
+<!-- Modal contacto -->
+<div id="ct-modal" hidden onclick="if(event.target==this)cierraCt()">
+<div class="box" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(480px,95%);z-index:50;background:var(--bg)">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+  <h3 style="font-size:24px" id="ct-modal-tit">Nuevo contacto</h3>
+  <button class="btn o s" onclick="cierraCt()">✕</button>
+</div>
+<label>Nombre</label><input id="ct_nom" maxlength="120">
+<label>Celular</label><input id="ct_tel" inputmode="numeric" maxlength="30">
+<label>Etiqueta (tipo de evento)</label><input id="ct_etq" maxlength="120" placeholder="Cumpleaños, Baby Shower…">
+<label>Notas</label><textarea id="ct_not" rows="2" maxlength="500"></textarea>
+<div class="acts">
+  <button class="btn" onclick="guardarContacto()">Guardar</button>
+  <button class="btn r" id="ct_del" onclick="borrarContacto()" hidden>Eliminar</button>
+  <button class="btn o" onclick="cierraCt();tab('p');nuevo({nombre:document.getElementById('ct_nom').value,telefono:document.getElementById('ct_tel').value})">＋ Crear pedido</button>
+</div>
+</div>
+</div>
 
 <!-- MIS PRECIOS -->
 <div id="v-pr" hidden>
@@ -244,7 +288,7 @@ const b=$('pr_save');b.disabled=true;try{await X('precios_guardar',{precios:o});
 
 function toast(m,bad){const t=$('toast');t.textContent=m;t.className='on'+(bad?' bad':'');clearTimeout(toast._t);toast._t=setTimeout(()=>t.className='',3200)}
 function salir(){try{sessionStorage.removeItem('alena_admin')}catch(e){}location.href='/'}
-function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-c').className=t=='c'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-cod').hidden=t!='c';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o';$('tb-cl').className=t=='cl'?'on':'';$('v-cl').hidden=t!='cl';$('tb-pr').className=t=='pr'?'on':'';$('v-pr').hidden=t!='pr';$('tb-dc').className=t=='dc'?'on':'';$('v-dc').hidden=t!='dc';if(t=='c')retos();if(t=='o')cargaOps();if(t=='cl')clientes();if(t=='pr')pintaPrecios();if(t=='dc')cargaCodigos()}
+function tab(t){$('tb-p').className=t=='p'?'on':'';$('tb-a').className=t=='a'?'on':'';$('tb-c').className=t=='c'?'on':'';$('v-list').hidden=t!='p'||!!E;$('v-edit').hidden=t!='p'||!E;$('v-aj').hidden=t!='a';$('v-cod').hidden=t!='c';$('tb-o').className=t=='o'?'on':'';$('v-op').hidden=t!='o';$('tb-cl').className=t=='cl'?'on':'';$('v-cl').hidden=t!='cl';$('tb-pr').className=t=='pr'?'on':'';$('v-pr').hidden=t!='pr';$('tb-dc').className=t=='dc'?'on':'';$('v-dc').hidden=t!='dc';if(t=='c')retos();if(t=='o')cargaOps();if(t=='cl'){clientes();cargaContactos();}if(t=='pr')pintaPrecios();if(t=='dc')cargaCodigos()}
 
 async function cargar(){try{const rc=D.recogidas,pp=D.precios;D=await A('listar');try{const [a,b]=await Promise.all([X('recogidas'),X('precios_listar')]);D.recogidas=a.recogidas;D.precios=b.precios}catch(e){D.recogidas=rc||{};D.precios=pp||{}}lista();ajustes()}catch(e){toast(e.message,1)}}
 function lista(){const q=$('busca').value.trim().toLowerCase(),qd=q.replace(/\D/g,'');
@@ -328,6 +372,28 @@ $('c_info').textContent=r.auto?'La API de WhatsApp está activa: los códigos se
 $('c_lista').innerHTML=r.retos.length?r.retos.map(x=>`<div class="dc"><span><b>${esc(x.nombre||'Cliente')}</b><small>Cel ${esc(x.telefono)} · pidió a las ${esc(x.hora)}</small></span><b style="font:600 24px Outfit;letter-spacing:.15em;color:var(--accd)">${esc(x.codigo)}</b><button class="btn s" onclick="envReto(${x.id},'${esc(x.telefono)}','${esc(x.codigo)}')">Enviar por WhatsApp</button><button class="btn o s" onclick="marcaReto(${x.id})">Ya lo envié</button></div>`).join(''):'<p class="hint">No hay códigos pendientes.</p>'}catch(e){}}
 async function envReto(id,tel,cod){window.open(`https://api.whatsapp.com/send/?phone=57${tel}&text=${encodeURIComponent('Tu código de acceso a ALENA es *'+cod+'*. Sirve por 1 hora. No lo compartas.')}`,'_blank');await marcaReto(id)}
 async function marcaReto(id){try{await A('reto_enviado',{id});retos()}catch(e){toast(e.message,1)}}
+/* ---- contactos (solo preguntaron) ---- */
+let CONTACTOS=[],CT_EDIT=null;
+async function cargaContactos(){try{CONTACTOS=(await X('contactos_listar')).contactos;filtrarContactos()}catch(e){toast(e.message,1)}}
+function subTabCl(s){$('tb-cl-p').className=s=='p'?'on':'';$('tb-cl-c').className=s=='c'?'on':'';$('v-cl-p').hidden=s!='p';$('v-cl-c').hidden=s!='c';if(s=='c'&&!CONTACTOS.length)cargaContactos()}
+function filtrarContactos(){const q=($('ct_q').value||'').trim().toLowerCase(),qd=q.replace(/\D/g,'');
+const L=CONTACTOS.filter(c=>!q||(c.nombre||'').toLowerCase().includes(q)||(qd&&(c.telefono||'').includes(qd)));
+$('ct-lista').innerHTML=L.length?L.map(c=>`<div class="row" style="cursor:pointer" onclick="editarContacto(${c.id})"><div class="m"><b>${esc(c.nombre||'Sin nombre')}</b><small>${c.telefono?'Cel '+esc(c.telefono):'Sin celular'}${c.etiqueta?' · '+esc(c.etiqueta):''}</small></div><small style="color:var(--mu)">${esc(c.creado||'')}</small></div>`).join(''):'<p class="hint" style="text-align:center;margin-top:20px">No hay contactos aún.</p>'}
+function abrirNuevoContacto(){CT_EDIT=null;$('ct-modal-tit').textContent='Nuevo contacto';$('ct_nom').value='';$('ct_tel').value='';$('ct_etq').value='';$('ct_not').value='';$('ct_del').hidden=true;$('ct-modal').hidden=false}
+function editarContacto(id){CT_EDIT=CONTACTOS.find(c=>c.id==id);if(!CT_EDIT)return;$('ct-modal-tit').textContent='Editar contacto';$('ct_nom').value=CT_EDIT.nombre||'';$('ct_tel').value=CT_EDIT.telefono||'';$('ct_etq').value=CT_EDIT.etiqueta||'';$('ct_not').value=CT_EDIT.notas||'';$('ct_del').hidden=false;$('ct-modal').hidden=false}
+function cierraCt(){$('ct-modal').hidden=true;CT_EDIT=null}
+async function guardarContacto(){const datos={nombre:$('ct_nom').value.trim(),telefono:$('ct_tel').value.trim(),etiqueta:$('ct_etq').value.trim(),notas:$('ct_not').value.trim()};
+if(CT_EDIT)datos.id=CT_EDIT.id;
+try{await X('contacto_guardar',datos);toast('Contacto guardado ✓');cierraCt();await cargaContactos()}catch(e){toast(e.message,1)}}
+async function borrarContacto(){if(!CT_EDIT||!confirm('¿Eliminar este contacto?'))return;try{await X('contacto_eliminar',{id:CT_EDIT.id});toast('Contacto eliminado');cierraCt();await cargaContactos()}catch(e){toast(e.message,1)}}
+async function importarContactos(){const txt=$('ct_import_txt').value.trim();if(!txt)return toast('Pega los datos primero.',1);
+const lista=txt.split('\n').map(l=>{const p=l.split('\t');return{nombre:(p[0]||'').trim(),telefono:(p[1]||'').replace(/\D/g,''),etiqueta:(p[2]||'').trim()}}).filter(x=>x.nombre||x.telefono);
+if(!lista.length)return toast('No se encontraron filas válidas.',1);
+try{const r=await X('contactos_importar',{lista});toast(`${r.importados} contactos importados ✓`);$('ct_import_txt').value='';$('ct-import-box').hidden=true;await cargaContactos()}catch(e){toast(e.message,1)}}
+/* ---- autocomplete por teléfono en nuevo pedido ---- */
+let _telTimer=null;
+async function buscarPorTel(val){clearTimeout(_telTimer);const tel=(val||'').replace(/\D/g,'');if(tel.length<7)return;
+_telTimer=setTimeout(async()=>{try{const r=await X('buscar_contacto',{telefono:tel});if(r.encontrado&&!$('e_nombre').value.trim()){$('e_nombre').value=r.nombre||'';if(r.cedula)$('e_cedula').value=r.cedula;toast('Cliente encontrado: '+r.nombre+' ✓')}}catch(e){}},600)}
 /* ---- códigos de descuento ---- */
 let CODIGOS=[];
 async function cargaCodigos(){try{CODIGOS=(await X('codigos_listar')).codigos;pintaCodigos()}catch(e){toast(e.message,1)}}

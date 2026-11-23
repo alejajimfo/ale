@@ -38,6 +38,16 @@ function esquemaExtra() {
         descripcion text,
         creado timestamptz NOT NULL DEFAULT now()
       )`);
+      // Contactos: personas que preguntaron pero no tienen pedido
+      await q(`CREATE TABLE IF NOT EXISTS contactos (
+  id serial PRIMARY KEY,
+  nombre text,
+  telefono text,
+  etiqueta text,
+  notas text,
+  creado timestamptz NOT NULL DEFAULT now(),
+  actualizado timestamptz NOT NULL DEFAULT now()
+)`);
     })().catch((e) => { _listo = null; throw e; });
   }
   return _listo;
@@ -129,6 +139,65 @@ async function admin(b) {
       await q(`DELETE FROM codigos_descuento WHERE id = $1::int`, [parseInt(b.id, 10)]);
       return json({ ok: true });
     }
+    // ---- Contactos ----
+    case 'contactos_listar': {
+      const r = await q(`SELECT id, nombre, telefono, etiqueta, notas,
+        to_char(creado AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD') AS creado
+        FROM contactos ORDER BY actualizado DESC`);
+      return json({ contactos: r });
+    }
+    case 'contacto_guardar': {
+      const nom = texto(b.nombre, 120);
+      const tel = texto(b.telefono, 30);
+      const etq = texto(b.etiqueta, 120);
+      const not = texto(b.notas, 500);
+      if (b.id) {
+        const id = parseInt(b.id, 10);
+        if (!Number.isInteger(id)) return json({ error: 'ID no válido.' }, 400);
+        await q(`UPDATE contactos SET nombre=$2, telefono=$3, etiqueta=$4, notas=$5, actualizado=now() WHERE id=$1::int`,
+          [id, nom, tel, etq, not]);
+      } else {
+        await q(`INSERT INTO contactos (nombre, telefono, etiqueta, notas) VALUES ($1,$2,$3,$4)`,
+          [nom, tel, etq, not]);
+      }
+      return json({ ok: true });
+    }
+    case 'contacto_eliminar': {
+      await q(`DELETE FROM contactos WHERE id=$1::int`, [parseInt(b.id, 10)]);
+      return json({ ok: true });
+    }
+    case 'contactos_importar': {
+      // Importa array de {nombre, telefono, etiqueta} ignorando duplicados por teléfono
+      const lista = Array.isArray(b.lista) ? b.lista.slice(0, 500) : [];
+      let importados = 0;
+      for (const c of lista) {
+        const nom = texto(c.nombre, 120);
+        const tel = texto(c.telefono, 30);
+        const etq = texto(c.etiqueta, 120);
+        if (!tel && !nom) continue;
+        await q(`INSERT INTO contactos (nombre, telefono, etiqueta)
+                 VALUES ($1,$2,$3)
+                 ON CONFLICT DO NOTHING`, [nom, tel, etq]);
+        importados++;
+      }
+      return json({ ok: true, importados });
+    }
+    // Buscar cliente por teléfono para autocompletar en nuevo pedido
+    case 'buscar_contacto': {
+      const tel = texto(b.telefono, 30);
+      if (!tel) return json({ encontrado: false });
+      // Busca primero en pedidos existentes
+      const enPedido = await q(`SELECT nombre, cedula, telefono FROM pedidos WHERE telefono=$1 LIMIT 1`, [tel]);
+      if (enPedido.length) return json({ encontrado: true, fuente: 'pedido', nombre: enPedido[0].nombre, cedula: enPedido[0].cedula, telefono: enPedido[0].telefono });
+      // Luego en contactos
+      const enContacto = await q(`SELECT nombre, telefono, etiqueta FROM contactos WHERE telefono=$1 LIMIT 1`, [tel]);
+      if (enContacto.length) return json({ encontrado: true, fuente: 'contacto', nombre: enContacto[0].nombre, telefono: enContacto[0].telefono, etiqueta: enContacto[0].etiqueta });
+      return json({ encontrado: false });
+    }
+    case 'items_con_descuento': {
+      const r = await q(`SELECT nombre FROM precios_desc`);
+      return json({ items: r.map(x => x.nombre) });
+    }
     default: return json({ error: 'Acción no reconocida.' }, 400);
   }
 }
@@ -177,7 +246,9 @@ export default async (req) => {
       if (!cod) return json({ error: 'Escribe un código.' }, 400);
       const r = await q(`SELECT valor FROM codigos_descuento WHERE codigo = $1 AND activo`, [cod]);
       if (!r.length) return json({ error: 'Código no válido o inactivo.' }, 400);
-      return json({ ok: true, valor: r[0].valor });
+      // Devolver también qué ítems tienen precio de descuento
+      const items = await q(`SELECT nombre FROM precios_desc`);
+      return json({ ok: true, valor: r[0].valor, items_con_descuento: items.map(x => x.nombre) });
     }
     const t = verificar(tokenDe(req));
     if (!t) return json({ error: 'Sesión vencida. Vuelve a ingresar.' }, 401);
