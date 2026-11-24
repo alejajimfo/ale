@@ -251,7 +251,8 @@ footer{background:#4a3f3b;color:#f3e2d8;padding:44px 0 30px;text-align:center}fo
 <div id="desc-row" hidden style="justify-content:space-between;font-size:15px;color:#c62828;font-weight:600;margin:6px 0 2px"><span id="desc-label">Descuento</span><span id="desc-monto"></span></div>
 <div id="desc-none" hidden style="font-size:13px;color:var(--mu);margin:4px 0">Ninguna pieza de tu selección aplica este código.</div>
 <div id="tot-final-row" hidden class="tot" style="font-size:22px;font-weight:700;border-top:2px solid #2e7d32;margin-top:6px;padding-top:8px;color:#2e7d32"><span>Total con descuento</span><span id="tot-final"></span></div>
-<div class="avc" role="note" style="margin-top:10px">💡 <b>Este valor corresponde solo a las piezas que elegiste.</b><br>El costo total (transporte, montaje, globos y flores, según tu evento) te lo entregamos por WhatsApp.<div id="avc-dep" hidden style="margin-top:6px">📌 <b>En el alquiler, el depósito de garantía es obligatorio.</b></div></div>
+<div class="avc" id="avc-tot" role="note" style="margin-top:10px" hidden><b>Este valor corresponde solo a las piezas que elegiste.</b><br>El costo total (transporte, montaje, globos y flores, según tu evento) te lo entregamos por WhatsApp.</div>
+<div class="avc" id="avc-dep" role="note" style="margin-top:10px" hidden><b>El depósito de garantía es obligatorio.</b></div>
 <div style="display:flex;gap:8px;margin-top:14px;align-items:center;flex-wrap:wrap">
   <input id="cod_input" placeholder="Código de descuento" maxlength="40" style="flex:1;min-width:140px;padding:9px 12px;font-size:14px" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')" onkeydown="if(event.key==='Enter'){event.preventDefault();aplicarCodigo()}">
   <button class="btn o s" onclick="aplicarCodigo()" id="cod_btn">Aplicar</button>
@@ -387,7 +388,7 @@ function quitarCodigo(){descuento={codigo:'',items:[]};document.getElementById('
 function upd(){let n=0,t=0,h='';for(const id in cart){const p=P.find(x=>x[0]==id);n+=cart[id];t+=cart[id]*p[2];h+=`<div class="ln"><span>${p[1]}</span><span class="q"><button onclick="chg('${id}',-1)">–</button>${cart[id]}<button onclick="chg('${id}',1)">+</button></span><span>${cop(cart[id]*p[2])}</span></div>`}
 try{localStorage.setItem('alena_cart',JSON.stringify(cart))}catch(e){}document.getElementById('cnt').textContent=n;document.getElementById('tot').textContent=cop(t);
 document.getElementById('lines').innerHTML=h||'<p style="color:var(--mu);font-size:14px;margin:10px 0">Aún no has agregado piezas. Para una decoración completa puedes enviar solo tu idea.</p>';updDesc()}
-function setMode(m){mode=m;document.getElementById('m1').className=m=='alquiler'?'on':'';document.getElementById('m2').className=m=='cotizar'?'on':'';document.querySelector(`input[value=${m}]`).checked=true;document.getElementById('entrega').hidden=m!='alquiler';document.getElementById('entregaNota').hidden=m=='alquiler';document.getElementById('f_cotw').hidden=m=='alquiler';document.getElementById('f_t2w').hidden=m!='alquiler';document.getElementById('avc-dep').hidden=m!='alquiler';if(typeof updTrans=='function')updTrans()}
+function setMode(m){mode=m;document.getElementById('m1').className=m=='alquiler'?'on':'';document.getElementById('m2').className=m=='cotizar'?'on':'';document.querySelector(`input[value=${m}]`).checked=true;document.getElementById('entrega').hidden=m!='alquiler';document.getElementById('entregaNota').hidden=m=='alquiler';document.getElementById('f_cotw').hidden=m=='alquiler';document.getElementById('f_t2w').hidden=m!='alquiler';document.getElementById('avc-dep').hidden=m!='alquiler';document.getElementById('avc-tot').hidden=m=='alquiler';if(typeof updTrans=='function')updTrans()}
 function openCart(m){if(m)setMode(m);step(m=='cotizar'?2:1);document.getElementById('addbar').classList.remove('on');document.getElementById('dr').classList.add('on');document.getElementById('ov').classList.add('on')}
 function armarAlquiler(){setMode('alquiler');location.hash='catalogo/todo'}
 function step(n){document.getElementById('st1').hidden=n!=1;document.getElementById('st2').hidden=n!=2;document.getElementById('err1').textContent='';
@@ -401,7 +402,7 @@ function updTrans(){const z=zonaSel(),b=document.getElementById('f_tr_info');
 const lleva=mode!='alquiler'||document.getElementById('f_d').selectedIndex==1;
 if(!z){b.hidden=true;return}
 b.hidden=false;
-b.innerHTML=!lleva?'Elegiste recoger y devolver tú mismo(a): no pagas transporte. 👍':z.p==null?'🚚 El valor del transporte para tu lugar te lo confirmamos por WhatsApp.':`🚚 Transporte a <b>${z.n}</b>: <b>${cop(z.p)}</b>${mode=='alquiler'?' (entrega y recogida)':''}`}
+b.innerHTML=!lleva?'Elegiste recoger y devolver tú mismo(a): no pagas transporte.':z.p==null?'El valor del transporte para tu lugar te lo confirmamos por WhatsApp.':`Transporte a <b>${z.n}</b>: <b>${cop(z.p)}</b>${mode=='alquiler'?' (entrega y recogida)':''}`}
 function closeCart(){document.getElementById('dr').classList.remove('on');document.getElementById('ov').classList.remove('on')}
 function send(){const v=i=>document.getElementById(i).value.trim(),e=document.getElementById('err');
 if(!v('f_n')||!v('f_e')||!v('f_f')||!v('f_l')||!document.getElementById('f_z').value){e.textContent='Completa nombre, tipo de evento, fecha, municipio y dirección.';return}
