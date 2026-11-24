@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "description": "ALENA · Celebrar también es arte — sitio + portal de pedidos (Netlify + Neon)",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.0"
+    "@neondatabase/serverless": "^1.0.0",
+    "pdf-lib": "^1.17.1"
   }
 }

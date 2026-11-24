@@ -486,7 +486,7 @@ ${p.mensaje?`<div class="msg">${esc(p.mensaje)}</div>`:''}
 ${p.total?`<h4>Cotización</h4><div class="eco"><div><small>Total</small><b>${cop(p.total)}</b></div><div><small>Abonado</small><b>${cop(p.abonado)}</b></div><div><small>Saldo</small><b>${cop(saldo)}</b></div>${p.deposito?`<div><small>Depósito de garantía</small><b>${cop(p.deposito)}</b></div>`:''}</div>`:''}
 ${p.items&&p.items.length?`<h4>Piezas y servicios</h4><ol class="its">`+p.items.map(it=>`<li><b>${cop(it.c*it.p)}</b>${it.c} × ${esc(it.n)}</li>`).join('')+'</ol>':''}
 ${p.detalle?`<h4>Más detalles</h4><div class="det">${esc(p.detalle)}</div>`:''}
-${p.docs.length?`<h4>Documentos</h4>`+p.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${CAT_DOC[d.categoria]||'Documento'} · ${Math.max(1,Math.round(d.tam/1024))} KB</small></span><button class="btn o" onclick="pdDoc(${d.id})">Descargar</button></div>`).join(''):''}
+${p.docs.length?`<h4>Documentos</h4>`+p.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${CAT_DOC[d.categoria]||'Documento'} · ${Math.max(1,Math.round(d.tam/1024))} KB</small></span><span style="display:flex;gap:6px;flex-wrap:wrap">${/^(application\/pdf|image\/)/.test(d.tipo||'')?`<button class="btn" onclick="pdVerDoc(${d.id})">Ver</button>`:''}<button class="btn o" onclick="pdDoc(${d.id})">Descargar</button></span></div>`).join(''):''}
 ${opinionHtml(p)}
 </article>`}).join('')+'<p class="res"><button class="btn o" onclick="pdSalir()">Salir</button></p>'}
 async function pdExtras(){try{const d=await api('/api/extras',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({accion:'mio'})});
@@ -503,6 +503,17 @@ async function pdOpinar(id){const e=$('ope'+id),b=$('opb'+id),s=ST[id]||(PX.op[i
 if(!s){e.textContent='Elige de 1 a 5 estrellas.';return}b.disabled=true;b.textContent='Enviando…';
 try{await api('/api/extras',{method:'POST',headers:{...JH,Authorization:'Bearer '+TOK},body:JSON.stringify({accion:'opinar',pedido_id:id,estrellas:s,texto:$('opt'+id).value})});
 delete ST[id];delete ST['e'+id];await pdExtras()}catch(x){e.textContent=x.message;b.disabled=false;b.textContent='Enviar opinión'}}
+let VISOR_URL='';
+async function pdVerDoc(id){const d=PD.flatMap(p=>p.docs).find(x=>x.id==id);if(!d)return;
+let v=document.getElementById('visor');if(!v){v=document.createElement('div');v.id='visor';v.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;flex-direction:column;padding:12px';
+v.innerHTML='<div style="background:#fff;border-radius:14px 14px 0 0;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b id="visor-t" style="flex:1;min-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></b><a id="visor-a" class="btn o" target="_blank" rel="noopener">Abrir en pestaña nueva</a><button class="btn o" id="visor-d">Descargar</button><button class="btn" onclick="pdCierraVisor()">Cerrar</button></div><div id="visor-c" style="flex:1;background:#fff;border-radius:0 0 14px 14px;overflow:auto;display:flex;align-items:center;justify-content:center;color:#777">Cargando…</div>';document.body.appendChild(v)}
+v.style.display='flex';document.getElementById('visor-t').textContent=d.nombre;const c=document.getElementById('visor-c');c.textContent='Cargando…';document.getElementById('visor-d').onclick=()=>pdDoc(id);
+try{const r=await fetch('/api/documento?id='+id+'&ver=1',{headers:{Authorization:'Bearer '+TOK}});if(!r.ok)throw 0;const b=await r.blob();if(VISOR_URL)URL.revokeObjectURL(VISOR_URL);VISOR_URL=URL.createObjectURL(b);
+document.getElementById('visor-a').href=VISOR_URL;
+c.innerHTML='';const el=document.createElement(d.tipo&&d.tipo.startsWith('image/')?'img':'iframe');el.src=VISOR_URL;el.title=d.nombre;el.style.cssText=el.tagName=='IMG'?'max-width:100%;max-height:100%':'width:100%;height:100%;border:0';c.appendChild(el)}
+catch(e){c.textContent='No pudimos mostrar el documento. Vuelve a ingresar e intenta de nuevo.'}}
+function pdCierraVisor(){const v=document.getElementById('visor');if(v){v.style.display='none';document.getElementById('visor-c').innerHTML=''}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')pdCierraVisor()});
 async function pdDoc(id){const d=PD.flatMap(p=>p.docs).find(x=>x.id==id);
 try{const r=await fetch('/api/documento?id='+id,{headers:{Authorization:'Bearer '+TOK}});if(!r.ok)throw 0;const u=URL.createObjectURL(await r.blob());
 const a=document.createElement('a');a.href=u;a.download=d?d.nombre:'documento';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}

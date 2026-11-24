@@ -1,5 +1,6 @@
 // POST /api/admin  {accion, ...}  (Authorization: Bearer <token de admin>)
 import { COLS_PEDIDO, PASOS, ensureSchema, fallo, getAjustes, json, q, refDe, setAjuste, soloDigitos, tokenDe, verificar, pin5, LARGO_PIN } from '../lib/util.mjs';
+import { cotizacionPdf } from '../lib/cotizacion.mjs';
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const TIPOS_OK = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
@@ -86,7 +87,27 @@ async function guardar(b) {
              VALUES ($1,$2,$3,$4,$5,$6::date,$7,$8::int,$9::jsonb,$10,$11,$12::int,$13::int,$14::int,$15,$16::boolean,$17::jsonb,$18,$19) RETURNING id`, [...vals, await pinParaCliente(cedula, telefono)]))[0].id;
   }
   await asegurarPin(id);
-  return json({ ok: true, id, ref: refDe(id) });
+  // La cotización en PDF se crea sola al guardar; si falla, el pedido igual queda guardado.
+  let cotizacion = false;
+  try { cotizacion = !!(await generarCotizacion(id)); } catch (e) { console.error('[cotizacion]', e); }
+  return json({ ok: true, id, ref: refDe(id), cotizacion });
+}
+
+// Cotización en PDF generada automáticamente a partir del pedido. Se reemplaza la anterior generada por el sistema
+// (los documentos que sube el equipo a mano no se tocan).
+const PREFIJO_COT = 'Cotización ALENA';
+async function generarCotizacion(id) {
+  const p = (await q(`SELECT nombre, telefono, lugar, to_char(fecha_evento, 'YYYY-MM-DD') AS fecha_evento, items, total, abonado, deposito, detalle, mensaje, recogida, modalidad
+                      FROM pedidos WHERE id = $1::int`, [id]))[0];
+  if (!p) return null;
+  const bytes = Buffer.from(await cotizacionPdf(p));
+  const nombre = `${PREFIJO_COT} - ${p.nombre}.pdf`.slice(0, 150);
+  const previo = (await q(`SELECT publico FROM documentos WHERE pedido_id = $1::int AND categoria = 'cotizacion' AND nombre LIKE $2 ORDER BY id DESC LIMIT 1`, [id, PREFIJO_COT + '%']))[0];
+  await q(`DELETE FROM documentos WHERE pedido_id = $1::int AND categoria = 'cotizacion' AND nombre LIKE $2`, [id, PREFIJO_COT + '%']);
+  const r = await q(`INSERT INTO documentos (pedido_id, nombre, tipo, categoria, publico, tam, data)
+                     VALUES ($1::int, $2, 'application/pdf', 'cotizacion', $3::boolean, $4::int, decode($5, 'base64')) RETURNING id`,
+    [id, nombre, previo ? previo.publico : true, bytes.length, bytes.toString('base64')]);
+  return r[0].id;
 }
 
 async function subirDoc(b) {
@@ -152,6 +173,12 @@ export default async (req) => {
       case 'opinion_eliminar': {
         await q(`DELETE FROM opiniones WHERE id = $1::int`, [parseInt(b.id, 10)]);
         return json({ ok: true });
+      }
+      case 'generar_cotizacion': {
+        const id = parseInt(b.id, 10);
+        if (!Number.isInteger(id)) return json({ error: 'Pedido no válido.' }, 400);
+        const doc = await generarCotizacion(id);
+        return doc ? json({ ok: true, id: doc }) : json({ error: 'Pedido no encontrado.' }, 404);
       }
       case 'subir_doc':
         return await subirDoc(b);

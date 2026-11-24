@@ -134,6 +134,7 @@ label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
 
 <div id="e_docs" hidden>
 <h3 style="font-size:24px;margin-top:26px">Documentos</h3>
+<p class="hint" style="margin:0 0 8px">La cotización en PDF se crea sola cada vez que guardas el pedido. Si cambiaste algo, guarda primero y luego puedes volver a generarla aquí.</p><button type="button" class="btn o s" style="margin-bottom:10px" onclick="genCot()">Generar cotización PDF ahora</button>
 <div id="e_doclist"></div>
 <div class="g2" style="margin-top:6px">
 <div><label>Tipo</label><select id="d_cat"><option value="cotizacion">Cotización</option><option value="conformidad">Conformidad firmada</option><option value="recibo">Recibo / comprobante</option><option value="foto">Fotos (entrega / devolución)</option><option value="otro">Otro</option></select></div>
@@ -460,6 +461,7 @@ function volver(){E=null;tab('p');lista()}
 function pintaPasos(){const P=D.pasos[E.modalidad]||[];if(E.paso>=P.length)E.paso=P.length-1;
 $('e_pasos').innerHTML=P.map((n,i)=>{const c=i<E.paso?'d':i==E.paso?'c':'';const f=E.historial&&E.historial[i]&&i<=E.paso?new Date(E.historial[i]).toLocaleDateString('es-CO',{day:'numeric',month:'short',timeZone:'America/Bogota'}):'';
 return`<button type="button" class="${c}" onclick="E.paso=${i};pintaPasos()">${i+1}. ${esc(n)}${f?`<small>${f}</small>`:''}</button>`}).join('')}
+async function genCot(){try{await A('generar_cotizacion',{id:E.id});toast('Cotización PDF generada ✓');await recarga()}catch(e){toast(e.message,1)}}
 function pintaDocs(){const C={cotizacion:'Cotización',conformidad:'Conformidad',recibo:'Recibo',foto:'Fotos',otro:'Otro'};
 $('e_doclist').innerHTML=(E.docs||[]).length?E.docs.map(d=>`<div class="dc"><span>${esc(d.nombre)}<small>${C[d.categoria]||'Otro'} · ${Math.max(1,Math.round(d.tam/1024))} KB · ${d.publico?'visible al cliente':'solo equipo'}</small></span>
 <button class="btn o s" onclick="bajar(${d.id},'${esc(d.nombre).replace(/'/g,'')}')">Abrir</button><button class="btn o s" onclick="visDoc(${d.id},${!d.publico})">${d.publico?'Ocultar':'Mostrar'}</button><button class="btn r s" onclick="borraDoc(${d.id})">Quitar</button></div>`).join(''):'<p class="hint">Sin documentos todavía.</p>'}

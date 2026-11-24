@@ -7,7 +7,9 @@ export default async (req) => {
     const p = verificar(tokenDe(req));
     if (!p || (p.rol !== 'admin' && p.rol !== 'cliente')) return json({ error: 'Sesión vencida. Vuelve a ingresar.' }, 401);
 
-    const id = parseInt(new URL(req.url).searchParams.get('id'), 10);
+    const params = new URL(req.url).searchParams;
+    const id = parseInt(params.get('id'), 10);
+    const ver = params.get('ver') === '1'; // vista previa en pantalla (sin descargar)
     if (!Number.isInteger(id)) return json({ error: 'Documento no válido' }, 400);
 
     await ensureSchema();
@@ -24,7 +26,7 @@ export default async (req) => {
       status: 200,
       headers: {
         'content-type': r.tipo,
-        'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(nombre)}`,
+        'content-disposition': `${ver ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(nombre)}`,
         'cache-control': 'private, no-store',
         'x-content-type-options': 'nosniff',
       },
